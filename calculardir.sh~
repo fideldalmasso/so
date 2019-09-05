@@ -12,6 +12,7 @@ then
   total=0
   for i in ${directorio}*
     do
+    echo $i
     aux=$(stat -c %s $i)
     total=$((total + $aux))
     done
