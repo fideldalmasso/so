@@ -4,16 +4,18 @@ directorio=$1
 
 while [ ! -d $directorio ]
 do
-read -p "$directorio no es un directorio valido, ingrese uno correcto:" directorio
+read -p "$directorio no es un directorio válido, ingrese uno correcto:" directorio
 done
 
+total=0
 if [ -r $directorio ]
 then
-  total=0
   for i in ${directorio}*
     do
+	echo $i
     aux=$(stat -c %s $i)
-    total=$((total + $aux))
+	echo $aux
+    total=$(($total + $aux))
     done
   echo "Total directorio $directorio = $total"
 else
