@@ -1,4 +1,13 @@
 #Para ignorar los archivos temporales
-*~
-*.out
-cfile.txt
+*
+!bienvenida_cronicatv.sh
+!calculardir.sh
+!entorno.sh
+!calcular.sh
+!proceso.sh
+!copiaOrdenada.sh
+!contar.sh
+!.gitignore
+
+!links_comandos.md
+!descargos.md
