@@ -1,3 +1,4 @@
 #Para ignorar los archivos temporales
 *~
 *.out
+cfile.txt
