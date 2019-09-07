@@ -1,5 +1,12 @@
 #!/bin/bash
 
+if [ -z $1 ]
+then
+echo "ERROR: Este script necesita un parámetro"
+exit 1
+fi
+
+
 ps
 find / -type f -name "c*" &> $1 &
 echo "Se está generando una lista de archivos que comienzan con c"

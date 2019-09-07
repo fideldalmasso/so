@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo Hola $1, Ud. está logueado como usuario $(whoami)
+echo "Hola $1, Ud. está logueado como usuario $(whoami)"
 
 dia=$(date +%A)
 numero=$(date +%d)
@@ -8,7 +8,7 @@ mes=$(date +%B)
 anio=$(date +%Y)
 
 
-echo Hoy es $dia, $numero de $mes de $anio,
+echo "Hoy es $dia, $numero de $mes de $anio,"
 
 invierno=172
 inviernofuturo=$((172+365))
@@ -25,4 +25,4 @@ else
 	fi
 fi
 
-echo ÚLTIMO MOMENTO: faltan $diasrestantes días para el invierno!
+echo "ÚLTIMO MOMENTO: faltan $diasrestantes días para el invierno!"

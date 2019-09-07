@@ -12,9 +12,7 @@ if [ -r $directorio ]
 then
   for i in ${directorio}*
     do
-	echo $i
     aux=$(stat -c %s $i)
-	echo $aux
     total=$(($total + $aux))
     done
   echo "Total directorio $directorio = $total"
