@@ -3,6 +3,8 @@ variables especiales https://www.atareao.es/tutorial/scripts-en-bash/variables-e
 
 https://www.tldp.org/LDP/abs/html/internalvariables.html
 
+log https://www.atareao.es/tutorial/scripts-en-bash/log-en-bash/
+
 
 ## Buscar/imprimir/reemplazar texto
 grep https://www.digitalocean.com/community/tutorials/using-grep-regular-expressions-to-search-for-text-patterns-in-linux
@@ -10,6 +12,8 @@ grep https://www.digitalocean.com/community/tutorials/using-grep-regular-express
 tail y head https://linuxhint.com/bash_head_tail_command/
 
 awk grep sed y cut https://www.atareao.es/tutorial/terminal/filtros-awk-grep-sed-y-cut/
+
+sed https://likegeeks.com/es/sed-de-linux/
 
 
 ## Date formats

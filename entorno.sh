@@ -1,9 +1,11 @@
 #!/bin/bash
 echo "Bienvenido usuario: $USERNAME"
 
-echo "Usted se ha conectado en el día $(date +%d/%m/%Y)"
+fechaLogIn=$(last $USERNAME -F -R -n 1 | head -n 1 | grep -oE '\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b.*2019')
 
-echo "A la hora: $(date +%Hhs:%Mm:%Ss)"
+echo "Usted se ha conectado en el día $(date -d "$fechaLogIn" +%d/%m/%Y)"
+
+echo "A la hora: $(date -d "$fechaLogIn" +%Hhs:%Mm:%Ss)"
 
 echo "En la terminal: $TERM del host: $HOSTNAME"
 
