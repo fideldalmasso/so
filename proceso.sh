@@ -1,10 +1,6 @@
 #!/bin/bash
 
-if [ -z $1 ]
-then
-echo "ERROR: Este script necesita un parámetro"
-exit 1
-fi
+if [ -z $1 ]; then echo "ERROR: Este script necesita un argumento" ; exit 1 ; fi
 
 
 ps
