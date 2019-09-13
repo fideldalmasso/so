@@ -14,8 +14,6 @@ while [ $! != $id ]
 	read -p "El id ingresado no es el solicitado, ingrese uno correcto:" id
 done
 
-#if kill -0 $!
-#if pgrep -x "find" > /dev/null
 if ps -p $id > /dev/null
 	then
 	kill "$id"
