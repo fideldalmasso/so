@@ -10,10 +10,10 @@ void manejador2 (int sig);
 
 int main(){
 	
-	do{
+	
 	signal(SIGUSR1, &manejador1);
 	signal(SIGUSR2, &manejador2);
-	}while(sigT != 15);
+	while(sigT != 15);
 	
 	return 0;
 }

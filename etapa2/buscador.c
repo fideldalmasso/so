@@ -29,6 +29,7 @@ int main(int argc, char* argv[]){
 					printf(" - Regular size > 1 KB %d\n",tam);
 				}
 			}
+			sleep(2);
 		}
 	}
 	
