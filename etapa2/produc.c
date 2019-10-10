@@ -1,17 +1,25 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 #include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/unistd.h>
 
-main (int argc, char *argv[]){
+
+int main (int argc, char *argv[]){
 
 int parametro = atoi(argv[1]);
 int tiempo, i;
+pid_t pid;
 srand (time (NULL));
 
-printf("INICIO MAQUINA A: %d\n", getpid());
-printf("MAQUINA B %d\n", getpid());
 
-if (fork()==0){
+
+if ((pid=fork())==0){
+	printf("INICIO MAQUINA A: %d\n", getppid());
+	printf("MAQUINA B %d\n", getpid());
+	
+	
 	for(i=0; i<7; i++){
 	tiempo= rand()%6;
 	sleep(tiempo);
@@ -19,11 +27,12 @@ if (fork()==0){
 	}
 }
 else {
+
 	if(parametro != 1){	
 		for(i=0; i<7; i++){
 		tiempo= rand()%6;
 		sleep(tiempo);
-		printf("Trabajo realizado %d por MAQ A - time %d\n",i, tiempo);
+		printf("Trabajo realizado %d por MAQ A - time %d\n", i, tiempo);
 
 		}
 	}

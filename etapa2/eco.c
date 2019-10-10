@@ -3,6 +3,7 @@
 
 int main (int argc, char *argv[]) {
 	int i;
+	
 	printf("voy a gritar!!!!: %d\n", getpid());
 	for(i=1; i<4; i++){
 		fork();

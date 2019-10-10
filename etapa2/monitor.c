@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <signal.h>
+#include <unistd.h>
 
 int sigT=0;
 int sig1=0;
@@ -10,10 +11,10 @@ void manejador2 (int sig);
 
 int main(){
 	
-	
 	signal(SIGUSR1, &manejador1);
 	signal(SIGUSR2, &manejador2);
-	while(sigT != 15);
+	while(sigT != 15) pause();
+	
 	
 	return 0;
 }

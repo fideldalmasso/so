@@ -6,8 +6,12 @@
 
 int main(int argc, char *argv[], char *envp[]){
 
-printf("Procesamiento de tejido: %d\n",getpid());
+if (argc != 2){
+	printf("El programa acepta solo un parámetro\n");
+		exit(1);
+}
 
+printf("Procesamiento de tejido: %d\n",getpid());
 
 execve("celulas", argv, envp);
 

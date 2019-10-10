@@ -12,8 +12,6 @@ int main(int argc, char* argv[]){
 	struct dirent *ptr;
 	struct stat st;
 	
-	printf(argv[2]);
-	
 	if (dir != NULL){
 		while(ptr=readdir(dir)){
 			stat((ptr->d_name), &st);
@@ -29,8 +27,10 @@ int main(int argc, char* argv[]){
 					printf(" - Regular size > 1 KB %d\n",tam);
 				}
 			}
-			sleep(2);
+			sleep(1);
 		}
+	} else {
+		printf("El directorio ingresado no existe.\n");
 	}
 	
 	close(dir);
