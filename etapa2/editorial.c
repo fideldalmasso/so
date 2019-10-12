@@ -14,4 +14,6 @@ int main(int argc, char * argv[]) {
 		else
 			printf(" Tulibro SA\n");
 	}
+
+	return 0;
 }

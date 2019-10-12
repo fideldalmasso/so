@@ -16,4 +16,5 @@ int main(int argc, char * argv[]) {
             isbn = isbn + 1;
         }
     }
+    return 0;
 }
