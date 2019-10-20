@@ -41,7 +41,7 @@ ejercicio 4
 anexarej eco.c
 salto
 echo '## Salida eco.c' >> doc.md
-echo '![captura](captura.jpg){ width=400px } \' >> doc.md
+echo '![captura](captura.png){ width=400px } \' >> doc.md
 echo ' ' >> doc.md
 echo '## Esquematización en forma de árbol' >> doc.md
 echo 'Cantidad de procesos generados: 8' >> doc.md

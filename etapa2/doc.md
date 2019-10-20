@@ -185,7 +185,7 @@ int main (int argc, char *argv[]) {
 \pagebreak
  
 ## Salida eco.c
-![captura](captura.jpg){ width=400px } \
+![captura](captura.png){ width=400px } \
  
 ## Esquematización en forma de árbol
 Cantidad de procesos generados: 8
@@ -409,11 +409,11 @@ void procesarEntrada(char libros[20], char imprimir[20], int argc, char * argv[]
             i = 1;
             strcpy(imprimir, optarg);
             break;
-//~ 
-        //~ case ':':
-            //~ printf("La opción necesita un valor\n");
-            //~ exit(1);
-            //~ break;
+
+        case ':':
+            printf("La opción necesita un valor\n");
+            exit(1);
+            break;
 
         case '?':
             printf("Opción inválida: %c\n", optopt);
@@ -450,6 +450,7 @@ void mostrarError(char palabra[]) {
 
 ## Gestión de procesos
 - Ejercicio 2: tejidos.c y celulas.c
+  - Asumimos que se ingresan números enteros positivos
 
 - Ejercicio 3: produc.c
 
@@ -459,6 +460,8 @@ void mostrarError(char palabra[]) {
 
 ## Gestión de archivos, directorios y sistemas de archivos + señales
 - Ejercicio 5: buscador.c y monitor.c
+  - Asumimos que no existen archivos con tamaño igual a 1 KB. 
+  - El proceso monitor debe seguir ejecutándose mientras no reciba 15 señales
 
 ***
 

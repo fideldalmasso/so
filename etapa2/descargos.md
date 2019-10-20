@@ -5,6 +5,7 @@
 
 ## Gestión de procesos
 - Ejercicio 2: tejidos.c y celulas.c
+  - Asumimos que se ingresan números enteros positivos
 
 - Ejercicio 3: produc.c
 
@@ -14,6 +15,8 @@
 
 ## Gestión de archivos, directorios y sistemas de archivos + señales
 - Ejercicio 5: buscador.c y monitor.c
+  - Asumimos que no existen archivos con tamaño igual a 1 KB. 
+  - El proceso monitor debe seguir ejecutándose mientras no reciba 15 señales
 
 ***
 
