@@ -24,8 +24,9 @@ titulo (){
 }
 
 #-----------------------------------------
-cat caratula.md > doc.md
-salto
+#cat caratula.md > doc.md
+#salto
+rm doc.md
 titulo 'Argumentos por línea de comandos (argv - argc - opciones)'
 ejercicio 1
 anexarej rectangulo.c 
@@ -67,4 +68,5 @@ anexar bibliografia.md
 
 #-----------------------------------------
 pandoc  doc.md metadata.yaml --pdf-engine=xelatex   -o doc.pdf -f markdown+implicit_figures
+pdfunite caratula.pdf doc.pdf TrabajoPráctico2_Grupo13_Cabaña,Dalmasso,Kloster.pdf
 #pandoc doc.md  --pdf-engine=xelatex  -o doc2.pdf
