@@ -1,9 +1,11 @@
 #include <stdio.h>
-#include <signal.h>
-#include <sys/stat.h>
-#include <dirent.h>
-#include <sys/types.h>
-#include <fcntl.h>
+#include <signal.h> //kill SIGUSR1
+#include <sys/stat.h> //stat DIR
+#include <dirent.h> //opendir readdir
+//~ #include <sys/types.h>
+//~ #include <fcntl.h>
+#include <stdlib.h> //atoi
+#include <unistd.h> //sleep close
 
 int main(int argc, char* argv[]) {
 	int pid = atoi(argv[1]);
@@ -13,7 +15,7 @@ int main(int argc, char* argv[]) {
 	struct stat st;
 
 	if (dir != NULL) {
-		while (ptr = readdir(dir)) {
+		while ((ptr = readdir(dir))) {
 			stat((ptr->d_name), &st);
 			if (S_ISREG(st.st_mode)) {
 				printf(ptr->d_name);
@@ -33,7 +35,7 @@ int main(int argc, char* argv[]) {
 		printf("El directorio ingresado no existe.\n");
 	}
 
-	close(dir);
+	closedir(dir);
 
 	return 0;
 }

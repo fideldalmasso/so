@@ -1,8 +1,8 @@
-#include <ctype.h>
+//~ #include <ctype.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdbool.h>
+#include <stdlib.h> //exit 
+//~ #include <unistd.h>
+#include <stdbool.h> //bool
 #include <getopt.h>
 
 int main (int argc, char **argv)

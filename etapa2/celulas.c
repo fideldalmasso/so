@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
+#include <stdlib.h> //atoi
+#include <unistd.h> //getpid
 
 void binario (int n);
 

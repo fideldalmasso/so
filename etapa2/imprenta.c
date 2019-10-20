@@ -1,13 +1,13 @@
 #include <stdio.h>
-#include <sys/wait.h>
-#include <unistd.h>
-#include <fcntl.h>
+//~ #include <sys/wait.h>
+#include <unistd.h> //pipe dup execve close fork
+#include <fcntl.h> //open 
 #include <getopt.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <errno.h>
+#include <stdlib.h> //exit
+#include <stdbool.h> //bool
+#include <string.h> //strcpy
+#include <sys/stat.h> //chmod
+#include <errno.h> //errno
 
 void mostrarError(char palabra[]);
 void procesarEntrada(char libros[20], char imprimir[20], int argc, char * argv[]);
@@ -85,11 +85,11 @@ void procesarEntrada(char libros[20], char imprimir[20], int argc, char * argv[]
             i = 1;
             strcpy(imprimir, optarg);
             break;
-
-        case ':':
-            printf("La opción necesita un valor\n");
-            exit(1);
-            break;
+//~ 
+        //~ case ':':
+            //~ printf("La opción necesita un valor\n");
+            //~ exit(1);
+            //~ break;
 
         case '?':
             printf("Opción inválida: %c\n", optopt);
@@ -99,11 +99,11 @@ void procesarEntrada(char libros[20], char imprimir[20], int argc, char * argv[]
     }
 
     if (!l) {
-        printf("-l es obligatorio!\n");
+        printf("-l es obligatorio y necesita un valor!\n");
         exit(1);
     }
     if (!i) {
-        printf("-i es obligatorio!\n");
+        printf("-i es obligatorio y necesita un valor!\n");
         exit(1);
     }
 
