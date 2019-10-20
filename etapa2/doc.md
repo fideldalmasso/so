@@ -1,7 +1,28 @@
-x
-utn frsf
-esta es la caratula
-x
+# Trabajo Práctico N°2: “Llamadas al sistema en LINUX”
+
+![logo](logo.png){ width=100px } \
+ 
+## Universidad Tecnológica Nacional Facultad Regional Santa Fe
+   
+## Asignatura: Sistemas Operativos
+
+## Segundo cuatrimestre, año 2019
+
+## Identificación del grupo: 13
+   
+## Nombres de los integrantes del grupo:
+Cabaña, Juan Pablo
+
+Dalmasso, Fidel José
+
+Kloster, Narella Katherine
+     
+## Direcciones de correo electrónico:
+juanpablocaban98@outlook.com
+
+fideldalmasso@gmail.com
+
+narellakloster79@gmail.com
 \pagebreak
  
 # Argumentos por línea de comandos (argv - argc - opciones)
@@ -60,7 +81,6 @@ int main (int argc, char **argv)
 
   return 0;
 }
- 
 ```
 \pagebreak
  
@@ -87,7 +107,6 @@ int main(int argc, char *argv[], char *envp[]) {
 
 	return 0;
 }
- 
 ```
 ## celulas.c:
 ```c
@@ -116,7 +135,6 @@ void binario (int n) {
 		printf("%d", mod);
 	}
 }
- 
 ```
 # Ejercicio 3:
 ## produc.c:
@@ -172,7 +190,6 @@ int main (int argc, char *argv[]) {
 
 	return 0;
 }
- 
 ```
 # Ejercicio 4:
 ## eco.c:
@@ -191,7 +208,6 @@ int main (int argc, char *argv[]) {
 
 	return 0;
 }
- 
 ```
 \pagebreak
  
@@ -239,7 +255,6 @@ int main(int argc, char* argv[]) {
 
 	return 0;
 }
- 
 ```
 ## monitor.c:
 ```c
@@ -274,7 +289,6 @@ void manejador2 (int sig) {
 	sig2++;
 	printf("Acumulado de archivos regulares mayores a 1 K: %d\n", sig2);
 }
- 
 ```
 \pagebreak
  
@@ -301,7 +315,7 @@ int main(int argc, char * argv[]) {
         }
     }
     return 0;
-} 
+}
 ```
 ## editorial.c:
 ```c
@@ -324,7 +338,6 @@ int main(int argc, char * argv[]) {
 
 	return 0;
 }
- 
 ```
 ## imprenta.c:
 ```c
@@ -444,5 +457,42 @@ void mostrarError(char palabra[]) {
     perror(palabra);
     exit(1);
 }
- 
 ```
+\pagebreak
+ 
+# Descargos
+## Argumentos por línea de comando (argc - argv - opciones)
+### Ejercicio 1: rectangulo.c
+
+## Gestión de procesos
+### Ejercicio 2: tejidos.c y celulas.c
+
+### Ejercicio 3: produc.c
+
+### Ejercicio 4: eco.c
+
+## Gestión de archivos, directorios y sistemas de archivos + señales
+### Ejercicio 5: buscador.c y monitor.c
+
+## Redirección de entrada y salida
+### Ejercicio 6: isbn.c, editorial.c e imprenta.c
+- Asumimos que el archivo libros.txt contiene un salto de linea (carriage return) al final.\pagebreak
+ 
+# Bibliografía
+https://www.gnu.org/software/libc/manual/html_node/Miscellaneous-Signals.html
+
+https://cboard.cprogramming.com/c-programming/133346-determine-file-type-linux.html
+
+https://linux.die.net/man/3/readdir
+
+https://stackoverflow.com/questions/238603/how-can-i-get-a-files-size-in-c
+
+http://codewiki.wikidot.com/c:system-calls:open
+
+https://www.geeksforgeeks.org/input-output-system-calls-c-create-open-close-read-write/
+
+https://stackoverflow.com/questions/21666050/c-finding-newline-chartacters-in-my-buffer-from-a-read-system-call
+
+https://www.geeksforgeeks.org/getopt-function-in-c-to-parse-command-line-arguments/
+
+https://cboard.cprogramming.com/c-programming/111914-getopt-parsing-string-argument.html

@@ -8,7 +8,7 @@ anexarej(){
 	echo  "## $1:" >> doc.md
 	echo '```c'>> doc.md
 	cat $1 >> doc.md
-	echo ' ' >> doc.md
+	#echo ' ' >> doc.md
 	echo '```'>> doc.md
 }
 salto(){
@@ -24,7 +24,7 @@ titulo (){
 }
 
 #-----------------------------------------
-cat caratula.txt > doc.md
+cat caratula.md > doc.md
 salto
 titulo 'Argumentos por línea de comandos (argv - argc - opciones)'
 ejercicio 1
@@ -49,7 +49,12 @@ ejercicio 6
 anexarej isbn.c
 anexarej editorial.c
 anexarej imprenta.c
-
+salto
+titulo 'Descargos'
+anexar descargos.md
+salto
+titulo 'Bibliografía'
+anexar bibliografia.md
 
 
 
