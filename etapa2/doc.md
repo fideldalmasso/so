@@ -461,7 +461,7 @@ void mostrarError(char palabra[]) {
 ## Gestión de archivos, directorios y sistemas de archivos + señales
 - Ejercicio 5: buscador.c y monitor.c
   - Asumimos que no existen archivos con tamaño igual a 1 KB. 
-  - El proceso monitor debe seguir ejecutándose mientras no reciba 15 señales
+  - Asumimos que el proceso monitor debe seguir ejecutándose mientras no reciba 15 señales
 
 ***
 
