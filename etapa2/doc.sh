@@ -39,6 +39,15 @@ anexarej produc.c
 ejercicio 4
 anexarej eco.c
 salto
+echo '## Salida eco.c' >> doc.md
+echo '![captura](captura.jpg){ width=400px } \' >> doc.md
+echo ' ' >> doc.md
+echo '## Esquematización en forma de árbol' >> doc.md
+echo 'Cantidad de procesos generados: 8' >> doc.md
+echo ' ' >> doc.md
+
+echo '![arbol](arbol.jpg){ width=400px } \' >> doc.md
+salto
 titulo 'Gestión de archivos, directorios y sistemas de archivos + señales'
 ejercicio 5
 anexarej buscador.c
@@ -56,11 +65,6 @@ salto
 titulo 'Bibliografía'
 anexar bibliografia.md
 
-
-
-
-
-
 #-----------------------------------------
-pandoc  doc.md metadata.yaml --pdf-engine=xelatex  -o doc.pdf
+pandoc  doc.md metadata.yaml --pdf-engine=xelatex   -o doc.pdf -f markdown+implicit_figures
 #pandoc doc.md  --pdf-engine=xelatex  -o doc2.pdf

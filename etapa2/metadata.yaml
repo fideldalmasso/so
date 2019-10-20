@@ -1,6 +1,6 @@
 ---
 geometry: margin=1in
-mainfont: Noto Sans
+#mainfont: Noto Sans
 fontsize: 9pt
 colorlinks: true
 documentclass: extarticle

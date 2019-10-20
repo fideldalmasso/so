@@ -211,6 +211,15 @@ int main (int argc, char *argv[]) {
 ```
 \pagebreak
  
+## Salida eco.c
+![captura](captura.jpg){ width=400px } \
+ 
+## Esquematización en forma de árbol
+Cantidad de procesos generados: 8
+ 
+![arbol](arbol.jpg){ width=400px } \
+\pagebreak
+ 
 # Gestión de archivos, directorios y sistemas de archivos + señales
 # Ejercicio 5:
 ## buscador.c:
@@ -462,21 +471,27 @@ void mostrarError(char palabra[]) {
  
 # Descargos
 ## Argumentos por línea de comando (argc - argv - opciones)
-### Ejercicio 1: rectangulo.c
+- Ejercicio 1: rectangulo.c
+
+***
 
 ## Gestión de procesos
-### Ejercicio 2: tejidos.c y celulas.c
+- Ejercicio 2: tejidos.c y celulas.c
 
-### Ejercicio 3: produc.c
+- Ejercicio 3: produc.c
 
-### Ejercicio 4: eco.c
+- Ejercicio 4: eco.c
+
+***
 
 ## Gestión de archivos, directorios y sistemas de archivos + señales
-### Ejercicio 5: buscador.c y monitor.c
+- Ejercicio 5: buscador.c y monitor.c
+
+***
 
 ## Redirección de entrada y salida
-### Ejercicio 6: isbn.c, editorial.c e imprenta.c
-- Asumimos que el archivo libros.txt contiene un salto de linea (carriage return) al final.\pagebreak
+- Ejercicio 6: isbn.c, editorial.c e imprenta.c
+  - Asumimos que el archivo libros.txt contiene un salto de linea (carriage return) al final.\pagebreak
  
 # Bibliografía
 https://www.gnu.org/software/libc/manual/html_node/Miscellaneous-Signals.html
