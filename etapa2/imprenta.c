@@ -84,11 +84,11 @@ void procesarEntrada(char libros[20], char imprimir[20], int argc, char * argv[]
             i = 1;
             strcpy(imprimir, optarg);
             break;
-//~ 
-        //~ case ':':
-            //~ printf("La opción necesita un valor\n");
-            //~ exit(1);
-            //~ break;
+
+        case ':':
+            printf("La opción necesita un valor\n");
+            exit(1);
+            break;
 
         case '?':
             printf("Opción inválida: %c\n", optopt);
