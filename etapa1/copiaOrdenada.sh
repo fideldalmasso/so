@@ -7,7 +7,7 @@ do
 read -p "$directorio no es un directorio válido, ingrese uno correcto:" directorio
 done
 
-rm -r $directorio/dir1 $directorio/dir2
+rm  -f $directorio/dir1 $directorio/dir2
 mkdir $directorio/dir1 $directorio/dir2
 
 #Ordenar de la Z a la A

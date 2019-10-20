@@ -1,6 +1,6 @@
+#include <signal.h> //signal
 #include <stdio.h>
-#include <signal.h>
-#include <unistd.h>
+#include <unistd.h> //pause
 
 int sigT = 0;
 int sig1 = 0;

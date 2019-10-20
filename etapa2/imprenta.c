@@ -1,13 +1,12 @@
-#include <stdio.h>
-//~ #include <sys/wait.h>
-#include <unistd.h> //pipe dup execve close fork
+#include <errno.h> //errno
 #include <fcntl.h> //open 
 #include <getopt.h>
-#include <stdlib.h> //exit
 #include <stdbool.h> //bool
+#include <stdio.h>
+#include <stdlib.h> //exit
 #include <string.h> //strcpy
 #include <sys/stat.h> //chmod
-#include <errno.h> //errno
+#include <unistd.h> //pipe dup execve close fork
 
 void mostrarError(char palabra[]);
 void procesarEntrada(char libros[20], char imprimir[20], int argc, char * argv[]);

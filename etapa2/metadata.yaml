@@ -1,0 +1,8 @@
+---
+geometry: margin=1in
+documentclass: extarticle
+mainfont: Noto Sans
+
+fontsize: 9pt
+colorlinks: true
+---

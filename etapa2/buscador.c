@@ -1,11 +1,10 @@
-#include <stdio.h>
-#include <signal.h> //kill SIGUSR1
-#include <sys/stat.h> //stat DIR
 #include <dirent.h> //opendir readdir
-//~ #include <sys/types.h>
-//~ #include <fcntl.h>
+#include <signal.h> //kill SIGUSR1
+#include <stdio.h>
 #include <stdlib.h> //atoi
+#include <sys/stat.h> //stat DIR
 #include <unistd.h> //sleep close
+
 
 int main(int argc, char* argv[]) {
 	int pid = atoi(argv[1]);

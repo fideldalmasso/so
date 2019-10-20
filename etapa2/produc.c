@@ -1,9 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h> //atoi rand srand
-#include <time.h> //time
-//~ #include <sys/types.h>
-#include <sys/wait.h> //wait
 #include <sys/unistd.h> //fork getpid getppid sleep
+#include <sys/wait.h> //wait
+#include <time.h> //time
 
 
 int main (int argc, char *argv[]) {

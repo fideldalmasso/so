@@ -1,9 +1,7 @@
-//~ #include <ctype.h>
+#include <getopt.h>
+#include <stdbool.h> //bool
 #include <stdio.h>
 #include <stdlib.h> //exit 
-//~ #include <unistd.h>
-#include <stdbool.h> //bool
-#include <getopt.h>
 
 int main (int argc, char **argv)
 {
