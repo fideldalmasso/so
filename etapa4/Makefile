@@ -1,7 +1,7 @@
 GCC=gcc
 GPP=g++
-CFLAGS=  -fshow-column -fno-diagnostics-show-caret  -Wall -O2   
-CXXFLAGS=  -fshow-column -fno-diagnostics-show-caret  -Wall -O2   -std=c++14
+CFLAGS=  -fshow-column -Wall -O2   
+CXXFLAGS=  -fshow-column -Wall -O2   -std=c++14
 LDFLAGS=  -s  
 OBJS=Release/buddyFS.o Release/ejercicio1.o Release/ejercicio2.o Release/ejercicio3.o 
 

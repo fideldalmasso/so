@@ -1,3 +1,4 @@
+#include "buddyFS.h"
 #include <fcntl.h> 
 #include <getopt.h>
 #include <stdio.h>
@@ -9,7 +10,7 @@
 // y utilizar la libreria siguiente
 //#include <ext2fs/ext2_fs.h> 
 #include <errno.h>
-#include "buddyFS.h"
+
 
 void mostrarError(char texto[]) {
     printf("Error numero: %d\n", errno);
@@ -33,7 +34,7 @@ int main(int argc, char * argv[]) {
     if (argc < 2) 
 		mostrarUso();
 
-    if ((fd1 = open("extra/imagen2.flp", O_RDONLY) ) == -1) mostrarError("open");
+    if ((fd1 = open("/dev/fd0", O_RDONLY) ) == -1) mostrarError("open");
 
 	//superbloque
 	cargarSuperbloque(fd1,sb);
