@@ -20,13 +20,12 @@
 #define EXT2_S_IFLNK    0xA000  /* symbolic link */
 #define EXT2_S_IFREG    0x8000  /* regular file */
 #define EXT2_S_IFDIR    0x4000  /* directory */
-
-
+/*
 #define printf1(...) printf("%-40s%12s\n", __VA_ARGS__)
 #define printf2(...) printf("%-40s%12d\n", __VA_ARGS__)
 #define printf4(x) printf("%s\n",x)
 #define printf5(x) printf("%d\n",x)
-
+*/
 
 void fechaF(int segundos, char fechaS []);
 void grupoF(int gid, char grupoS []);
@@ -149,7 +148,8 @@ void obtenerModo(int modo, char salida[11]) {
     }
 
     int i;
-    for (i = 0; i < 9; i++) { //los permisos estan ubicados en los primeros 9 bits
+    for (i = 0; i < 9; i++) { 
+		//los permisos estan ubicados en los primeros 9 bits
         if ((modo >> i) & 1)
             salida2[9 - i] = salida3[9 - i];
     }
@@ -161,12 +161,6 @@ void obtenerModo(int modo, char salida[11]) {
 
 void ejercicio2(int fd1, struct ext2_super_block sb, struct ext2_group_desc gd, struct ext2_inode ti[], struct ext2_dir_entry_2 tde[], int cantEntradasDirectorios) {
 
-    int tamBloque = sb.s_log_block_size + 1024;
-
-    
-
-    __le32 idBloqueDeEntradasRaiz = ti[1].i_block[0];
-    int entradaDirectorio = idBloqueDeEntradasRaiz * tamBloque;
 
     printf("%-8s %-16s %-6s %-8s %-8s %-8s %-16s %-16s\n", "Inodo", "Modo", "Links", "Usr", "Grp", "Tamanio", "Fecha", "Archivos");
     int i = 0;
@@ -288,6 +282,51 @@ void asignar(int tamNube,int tamArchivo, int arbol[]){
         }
 }
 
+int asignar2(int tamNube,int tamArchivo, int arbol[]){
+        int nivelActual=0, tamActual=tamNube, i=0;
+        
+        if(tamArchivo>tamNube){
+                return 0;
+        }
+
+        while(1){
+                if(tamArchivo<=tamActual && tamArchivo>(tamActual/2)){
+                        break;
+                }else{
+                        tamActual/=2;
+                        nivelActual++;
+                }
+        }
+
+        for(i=potencia(2,nivelActual)-1;i<=(potencia(2,nivelActual+1)-2);i++){
+                if(arbol[i]==0 && place(i,arbol)){
+                        arbol[i]=tamArchivo;
+                        particionar(i,arbol);
+                        return 1;
+                }
+        }
+
+        if(i==potencia(2,nivelActual+1)-1){
+            return 0;
+        }
+        
+        //return -1; FALTA ESTE RETURN, marca un warning
+}
+
+int espacioSuficiente (struct ext2_inode ti [], struct ext2_dir_entry_2 tde [], int cantEntradasDirectorios, int tamNube){
+    int i=0;
+    int *pesoArchivos=(int*) malloc (cantEntradasDirectorios*sizeof(int));
+    int *arbol=(int*) malloc (tamNube*sizeof(int));
+    
+    for (i=0; i<cantEntradasDirectorios; i++){
+        pesoArchivos[i]=ti[tde[i].inode-1].i_size;
+        if (asignar2(tamNube,pesoArchivos[i],arbol)==0){
+            tamNube=espacioSuficiente(ti,tde,cantEntradasDirectorios,tamNube*2);
+        }
+    }
+    return tamNube;
+}
+
 void ejercicio3 (struct ext2_inode ti [], struct ext2_dir_entry_2 tde [], int cantEntradasDirectorios, int tamNube){
     int i=0, espacioOcupado=0;
     int *pesoArchivos=(int*) malloc (cantEntradasDirectorios*sizeof(int));
@@ -297,19 +336,25 @@ void ejercicio3 (struct ext2_inode ti [], struct ext2_dir_entry_2 tde [], int ca
         pesoArchivos[i]=ti[tde[i].inode-1].i_size;
         espacioOcupado+=pesoArchivos[i];
         asignar(tamNube,pesoArchivos[i],arbol);
-    imprimir(tamNube,0,arbol);
-    printf("\n");
+        imprimir(tamNube,0,arbol);
+        printf("\n");
     }
 
-    printf("ESPACIO TOTAL OCUPADO %d\n",espacioOcupado);
+    printf("ESPACIO NECESARIO PARA REALIZAR TODAS LAS ASIGNACIONES: %d\n", espacioSuficiente(ti,tde,cantEntradasDirectorios,tamNube));
+    printf("ESPACIO TOTAL OCUPADO %db\n",espacioOcupado);
 
 }
 
+void mostrarUso(){
+	 printf("Modo de uso\nbuddyFS [-s][-l][-b tamanioNube] /rutaimagen\n");
+     exit(0);
+	}
 //------------------------------------------------------------------------
 int main(int argc, char * argv[]) {
+	
+	
     if (argc < 2) {
-        printf("Modo de uso\nbuddyFS [-s][-l][-b tamanioNube] /rutaimagen\n");
-        exit(0);
+       mostrarUso();
     };
 
     int fd1;
@@ -355,22 +400,17 @@ int main(int argc, char * argv[]) {
         if (read(fd1, de, sizeof(struct ext2_dir_entry_2)) == -1) mostrarError("read");
 
         tde[n]=*de;
-        //printf2("namelen", de->name_len);
-        //printf2("namelen", (u_int8_t)tde[n].name_len);
-        //imprimirBits(tde[n].name_len);
-        //printf2("namelensize", sizeof(tde[n].name_len));
-        //printf1("name", tde[n].name);
+
         tde[n].name[tde[n].name_len] = '\0';
 
         entradaDirectorio += de->rec_len;
         n++;
-        //~ printf5(de->inode);
         if ((entradaDirectorio % tamBloque) == 0) break;
         
     }
     int cantEntradasDirectorios = n;
 
-    if ((c = getopt (argc, argv, "slb")) < 0) mostrarError("getopt");
+    if ((c = getopt (argc, argv, "slb")) < 0) mostrarError("Debe ingresar un argumento");
 
     switch (c) {
     case 's':
@@ -387,23 +427,11 @@ int main(int argc, char * argv[]) {
             ejercicio3(ti, tde, cantEntradasDirectorios, tamNube);
         }
         break;
+    default:
+		mostrarUso();
     }
 
     return 0;
 
 }
 
-
-/*
-Links
-https://www.win.tue.nl/~aeb/linux/fs/ext2/ext2.html#I-UID
-http://ext2read.sourceforge.net/old/ext2fs.htm
-https://github.com/exscape/exscapeOS/blob/master/src/include/kernel/ext2.h
-https://stackoverflow.com/questions/10493411/what-is-bit-masking
-http://homepage.smc.edu/morgan_david/cs40/analyze-ext2.htm
-https://codeforwin.org/2016/01/c-program-to-get-value-of-nth-bit-of-number.html
-http://blog.olkie.com/2013/11/05/online-c-function-prototype-header-generator-tool/
-https://stackoverflow.com/questions/228684/how-to-declare-a-structure-in-a-header-that-is-to-be-used-by-multiple-files-in-c
-http://www.mathcs.emory.edu/~cheung/Courses/255/Syllabus/2-C-adv-data/dyn-array.html
-https://www.geeksforgeeks.org/dynamic-memory-allocation-in-c-using-malloc-calloc-free-and-realloc/
-*/
