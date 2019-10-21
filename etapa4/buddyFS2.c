@@ -13,6 +13,12 @@
 #include <linux/fs.h>
 #include <linux/ext2_fs.h>
 
+#define EXT2_S_IFMT     0xF000  /* format mask  */
+#define EXT2_S_IFLNK    0xA000  /* symbolic link */
+#define EXT2_S_IFREG    0x8000  /* regular file */
+#define EXT2_S_IFDIR    0x4000  /* directory */
+
+
 void fechaF(int segundos, char fechaS []);
 void grupoF(int gid, char grupoS []);
 void imprimir1(char texto1[], char texto2[]);
@@ -20,7 +26,7 @@ void imprimir2(char texto1[], int * numero);
 void imprimirBits (int num);
 void leer1(int fd, int offset, int bytes, char buffer[]);
 void leer2(int fd, int offset, int bytes, int *buffer);
-void leer3(int fd, int offset, int bytes, struct *buffer);
+//void leer3(int fd, int offset, int bytes, struct *buffer);
 void leerEImprimir1(int fd, int offset, int bytes, char buffer[], char texto[]);
 void leerEImprimir2(int fd, int offset, int bytes, int *buffer, char texto[]);
 void mostrarError(char texto[]);
@@ -50,10 +56,10 @@ void leer2(int fd, int offset, int bytes, int *buffer) {
     if (lseek(fd, offset, SEEK_SET) == -1) mostrarError("lseek");
     if (read(fd, buffer, bytes) == -1) mostrarError("read");
 }
-void leer3(int fd, int offset, int bytes, struct * buffer){
+/*void leer3(int fd, int offset, int bytes, struct * buffer){
     if (lseek(fd, offset, SEEK_SET) == -1) mostrarError("lseek");
     if (read(fd, buffer, bytes) == -1) mostrarError("read");
-}
+}*/
 void leerEImprimir1(int fd, int offset, int bytes, char buffer[], char texto[]) {
     leer1(fd, offset, bytes, buffer);
     imprimir1(texto, buffer);
@@ -87,20 +93,25 @@ void mostrarOpciones(){
 
 
 //ejercicio1------------------------------------------------------------------------
+
 void ejercicio1(struct ext2_super_block sb) {
 
-
-    imprimir1("Sistema de archivos tipo:", "EXT2");
-    imprimir1("Nombre del volumen:", s.nombreVolumenTexto);
-    imprimir2("Cantidad de i-nodos:", &s.cantInodos);
-    imprimir2("Cantidad de i-nodos libres:", &s.cantInodosLibres);
-    imprimir2("Primer i-nodo no reservado:", &s.idPrimerInodoNoReservado);
-    imprimir2("Tamanio estructura de un i-nodo:", &s.tamanioInodoEnBytes);
-    imprimir2("Tamanio de bloque:", &s.tamanioDeBloqueEnBytes);
-    imprimir2("Primer bloque de datos:", &s.idBloquePrimerBloqueDeDatos);
-    imprimir2("Cantidad de bloques:", &s.cantBloques);
-    imprimir2("Cantidad de bloques libres:", &s.cantBloquesLibres);
-    imprimir2("Tamanio total en disco:", &s.tamanioTotalEnBytes);
+    if (sb.s_magic != EXT2_SUPER_MAGIC) {
+        printf("%s\n", "No hay sistema de archivos tipo EXT2");
+        exit(1);
+    }
+    printf("%-40s%12s\n", "Sistema de archivos tipo:","EXT2");
+    printf("%-40s%12s\n", "Nombre del volumen:",sb.s_volume_name);
+    printf("%-40s%12d\n", "Cantidad de i-nodos:",sb.s_inodes_count);
+    printf("%-40s%12d\n", "Cantidad de i-nodos libres:",sb.s_free_inodes_count);
+    printf("%-40s%12d\n", "Primer i-nodo no reservado:",sb.s_first_ino);
+    printf("%-40s%12d\n", "Tamanio estructura de un i-nodo:",sb.s_inode_size);
+    printf("%-40s%12d\n", "Tamanio de bloque:",sb.s_log_block_size+1024);
+    printf("%-40s%12d\n", "Primer bloque de datos:",sb.s_first_data_block);
+    printf("%-40s%12d\n", "Cantidad de bloques:",sb.s_blocks_count);
+    printf("%-40s%12d\n", "Cantidad de bloques libres:",sb.s_free_blocks_count);
+    printf("%-40s%12d\n", "Tamanio total en disco:",sb.s_blocks_count * (sb.s_log_block_size+1024));
+    
 
 }
 
@@ -186,21 +197,69 @@ Archivo cargarArchivo(int entradaDirectorio, FS s) {
 
 };
 */
-void ejercicio2(struct ext2_group_desc gd) {
+void ejercicio2(int fd1, struct ext2_super_block sb, struct ext2_group_desc gd, struct ext2_inode i) {
 
-    int entradaDirectorio = s.primerEntradaDirectorio;
-    int contador = 0, aux=0;
+	int tamInodo= sb.s_inode_size;
+	int tamBloque= sb.s_log_block_size + 1024; 
+	
+	
+	
+	int directorioRaiz = (gd.bg_inode_table * tamBloque)+ tamInodo;
+	
+	//struct ext2_inode i;
+	//struct ext2_inode * i=malloc(sizeof(struct ext2_inode));
+
+	//printf("dirraiz %d\n",directorioRaiz);
+	//printf("bginodetalbe %d\n",gd.bg_inode_table);
+	//printf("tambloque %d\n",tamBloque);
+	if (lseek(fd1, directorioRaiz, SEEK_SET) == -1) mostrarError("lseek");
+    if (read(fd1, &i, tamInodo) == -1) mostrarError("read");
+    
+     //__le32 bloqueEntradasRaiz;
+     __le32 idBloqueDeEntradasRaiz = i.i_block[0];
+    // printf("idber:%d\n", idBloqueDeEntradasRaiz);
+     int entradaDirectorio = idBloqueDeEntradasRaiz * tamBloque;
+    // printf("entradadir%d\n",entradaDirectorio);
+    
+    //int primerBloqueEntradaRaiz; 
+    //if (lseek(fd1, directorioRaiz, SEEK_SET) == -1) mostrarError("lseek");
+    //if (read(fd1, i, tamInodo) == -1) mostrarError("read");
+    
+    //printf("%d",i->i_block);
+    
+	
+    //int entradaDirectorio = s.primerEntradaDirectorio;
+    int aux=0, recLen=0, nameLen=0, dirInodo=0;
     printf("%-8s %-16s %-6s %-8s %-8s %-8s %-16s %-16s\n", "Inodo", "Modo", "Links", "Usr", "Grp", "Tamanio", "Fecha", "Archivos");
     while (1) {
-
-        Archivo i = cargarArchivo(entradaDirectorio, s);
-        if ((entradaDirectorio + i.recLen) % s.tamanioDeBloqueEnBytes == 0) break;
-        printf("%-8d %-16s %-6d %-8s %-8s %-8d %-16s %-16s\n", i.idInodo, i.modoTexto, i.cantLinks, i.usuarioTexto, i.grupoTexto, i.tamanio, i.fechaTexto, i.nombreTexto);
-        entradaDirectorio += i.recLen;
+		
+		if (lseek(fd1, entradaDirectorio + 4, SEEK_SET) == -1) mostrarError("lseek");
+		if (read(fd1, &recLen, 2) == -1) mostrarError("read");
+		
+		if (lseek(fd1, entradaDirectorio + 6, SEEK_SET) == -1) mostrarError("lseek");
+		if (read(fd1, &nameLen, 1) == -1) mostrarError("read");
+		
+       // Archivo i = cargarArchivo(entradaDirectorio, s);
+        if ((entradaDirectorio + recLen) % tamBloque == 0) break;
+        
+        struct ext2_dir_entry * di = malloc(8+nameLen);
+        
+        if (lseek(fd1, entradaDirectorio, SEEK_SET) == -1) mostrarError("lseek");
+		if (read(fd1, &di, 8+nameLen) == -1) mostrarError("read");
+        
+        
+        //dirInodo = (di->inode -1) ;
+        if (lseek(fd1, di->inode, SEEK_SET) == -1) mostrarError("lseek");
+		if (read(fd1, &i, tamInodo) == -1) mostrarError("read");
+        
+        
+//printf("%-8d %-16s %-6d %-8s %-8s %-8d %-16s %-16s\n", i.idInodo, i.modoTexto, i.cantLinks, i.usuarioTexto, i.grupoTexto, i.tamanio, i.fechaTexto, i.nombreTexto);
+       // entradaDirectorio += i.recLen;
         aux++;
     }
 
 }
+
 //------------------------------------------------------------------------
 
 
@@ -209,12 +268,22 @@ int main(int argc, char * argv[]) {
     int fd1;
     if ((fd1 = open("extra/imagen1.flp", O_RDONLY) ) == -1) mostrarError("open");
 
-    struct ext2_super_block sb;
-    struct ext2_group_desc gd;
-    struct ext2_inode i;
+    struct ext2_super_block * sb =malloc(sizeof(struct ext2_super_block));
+    struct ext2_group_desc * gd =malloc(sizeof(struct ext2_group_desc));
 
-    leer3(fd1,1024,1024,ext2_super_block);
-    leer3(fd1,1024 * 2,1024,ext2_group_desc);
+    //if (sb == NULL) {printf("errorEnMalloc\n"); exit(1);}
+
+
+	if (lseek(fd1, 1024, SEEK_SET) == -1) mostrarError("lseek");
+    if (read(fd1, sb, 1024) == -1) mostrarError("read");
+    
+    if (lseek(fd1, 1024 * 2, SEEK_SET) == -1) mostrarError("lseek");
+    if (read(fd1, gd, 1024) == -1) mostrarError("read");
+
+	int cantInodos = sb->s_inodes_count;
+	int tamInodo = sb->s_inode_size;
+	struct ext2_inode * ti=calloc(cantInodos,tamInodo);
+
 
     int c;
 
@@ -224,14 +293,13 @@ int main(int argc, char * argv[]) {
 
     switch (c) {
     case 's':
-        ejercicio1(sb);
+       ejercicio1(*sb);
         break;
     case 'l':
-        ejercicio2(gd);
+		ejercicio2(fd1,*sb,*gd, *ti);
         break;
     }
     return 0;
-
 }
 
 
