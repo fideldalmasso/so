@@ -154,12 +154,12 @@ void obtenerModo(int modo, char salida[11]) {
             salida2[9 - i] = salida3[9 - i];
     }
 
-    //salida2[10] = '\0';
+    salida2[10] = '\0';
     strcpy(salida, salida2);
 
 }
 
-void ejercicio2(int fd1, struct ext2_super_block sb, struct ext2_group_desc gd, struct ext2_inode ti[], struct ext2_dir_entry tde[], int cantEntradasDirectorios) {
+void ejercicio2(int fd1, struct ext2_super_block sb, struct ext2_group_desc gd, struct ext2_inode ti[], struct ext2_dir_entry_2 tde[], int cantEntradasDirectorios) {
 
     int tamBloque = sb.s_log_block_size + 1024;
 
@@ -172,20 +172,21 @@ void ejercicio2(int fd1, struct ext2_super_block sb, struct ext2_group_desc gd, 
     int i = 0;
     for(i=0;i<cantEntradasDirectorios;i++) {
         char usuarioTexto[16];
+        //memset(usuarioTexto,' ',16);
         char grupoTexto[16];
+        //memset(grupoTexto,' ',16);
         char fechaTexto[24];
+        //memset(fechaTexto,' ',24);
         char modoTexto[11];
-        memset(usuarioTexto,' ',16);
-        memset(grupoTexto,' ',16);
-        memset(fechaTexto,' ',24);
-        memset(modoTexto,' ',11);
+        //memset(modoTexto,' ',11);
         
         obtenerModo(ti[tde[i].inode - 1].i_mode, modoTexto);
         fechaF(ti[tde[i].inode - 1].i_mtime, fechaTexto);
         grupoF(ti[tde[i].inode - 1].i_gid, grupoTexto);
         usuarioF(ti[tde[i].inode - 1].i_uid, usuarioTexto);
-
-        printf("%-8d %-16s %-6d %-8s %-8s %-8d %-16s %-16s\n", tde[i].inode, modoTexto, ti[tde[i].inode - 1].i_links_count, usuarioTexto, grupoTexto, ti[tde[i].inode - 1].i_size, fechaTexto, tde[i].name);
+		
+		int cantLinks = ti[tde[i].inode - 1].i_links_count;
+        printf("%-8d %-16s %-6d %-8s %-8s %-8d %-16s %-16s\n", tde[i].inode, modoTexto, cantLinks, usuarioTexto, grupoTexto, ti[tde[i].inode - 1].i_size, fechaTexto, tde[i].name);
 
     }
 
@@ -287,7 +288,7 @@ void asignar(int tamNube,int tamArchivo, int arbol[]){
         }
 }
 
-void ejercicio3 (struct ext2_inode ti [], struct ext2_dir_entry tde [], int cantEntradasDirectorios, int tamNube){
+void ejercicio3 (struct ext2_inode ti [], struct ext2_dir_entry_2 tde [], int cantEntradasDirectorios, int tamNube){
     int i=0, espacioOcupado=0;
     int *pesoArchivos=(int*) malloc (cantEntradasDirectorios*sizeof(int));
     int *arbol=(int*) malloc (tamNube*sizeof(int));
@@ -346,19 +347,28 @@ int main(int argc, char * argv[]) {
     int tamBloque = sb->s_log_block_size + 1024;
     __le32 idBloqueDeEntradasRaiz = ti[1].i_block[0];
     int entradaDirectorio = idBloqueDeEntradasRaiz * tamBloque;
-    struct ext2_dir_entry * de = malloc(sizeof(struct ext2_dir_entry));
-    struct ext2_dir_entry tde[200];
+    struct ext2_dir_entry_2 * de = malloc(sizeof(struct ext2_dir_entry_2));
+    struct ext2_dir_entry_2 tde[200];
     int n =0;
     while (1) {
         if (lseek(fd1, entradaDirectorio, SEEK_SET) == -1) mostrarError("lseek");
-        if (read(fd1, de, sizeof(struct ext2_dir_entry)) == -1) mostrarError("read");
+        if (read(fd1, de, sizeof(struct ext2_dir_entry_2)) == -1) mostrarError("read");
+
         tde[n]=*de;
+        //printf2("namelen", de->name_len);
+        //printf2("namelen", (u_int8_t)tde[n].name_len);
+        //imprimirBits(tde[n].name_len);
+        //printf2("namelensize", sizeof(tde[n].name_len));
+        //printf1("name", tde[n].name);
+        tde[n].name[tde[n].name_len] = '\0';
 
         entradaDirectorio += de->rec_len;
-        if ((entradaDirectorio % tamBloque) == 0) break;
         n++;
+        //~ printf5(de->inode);
+        if ((entradaDirectorio % tamBloque) == 0) break;
+        
     }
-    int cantEntradasDirectorios = n++;
+    int cantEntradasDirectorios = n;
 
     if ((c = getopt (argc, argv, "slb")) < 0) mostrarError("getopt");
 
