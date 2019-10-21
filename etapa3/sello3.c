@@ -47,7 +47,6 @@ int main(int argc, char *argv[]) {
 	key_t key;
 	int shmid;
 	char *segptr;
-	char *endptr;
 
 	if ((key = ftok(".", 'S')) == -1) mostrarError("ftok");
 
