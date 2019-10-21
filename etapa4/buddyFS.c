@@ -10,10 +10,10 @@
 #include <pwd.h>
 #include <linux/magic.h>
 #include <linux/fs.h>
-// #include <linux/ext2_fs.h>
+#include <linux/ext2_fs.h>
 // si linux/ext2_fs.h no existe, instalar e2fslibs-dev 
 // y utilizar la libreria siguiente
-#include <ext2fs/ext2_fs.h> 
+//#include <ext2fs/ext2_fs.h> 
 #include <errno.h>
 
 #define EXT2_S_IFMT     0xF000  /* format mask  */
