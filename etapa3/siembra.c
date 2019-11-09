@@ -4,11 +4,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define TAM 
-
-struct msgbuf{
+typedef struct msgbuf{
 	long mtype;
-	char mtext[TAM];
+	char mtext[10];
 };
 
 void enviar_mensaje(char prod);
@@ -21,9 +19,10 @@ int main(){
 	char productos [4] = {'S','M','G','L'};
 	char prod;
 	srand(time(NULL));
-	keyCola= ftok(".", 'C');
 	msgbuf sbuf;
 	size_t buf_lenght;
+
+	keyCola=260899	
 
 	if((msqid = msgget(keyCola, msgflg) < 0){
 		perror("msgget");
@@ -56,6 +55,7 @@ int main(){
 
 void enviar_mensaje(char prod){			
 	sbuf.mtype = 1;
-	strcpy(s.buf.mtext, "Se enviara a sembrar: %c", prod);
+	strcpy(s.buf.mtext, /*Falta mensaje*/);
 	buf_lenght = strlen(sbuf.mtext) + 1;
+	printf("Se enviara a sembrar: %c\n", prod);
 }
