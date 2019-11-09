@@ -1,0 +1,63 @@
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+
+#define MSGSZ 128
+
+struct msgbuf{
+  long    mtype;            //para recibir mensajes
+  char    mtext[MSGSZ];    //msj que se añade a la cola
+};
+
+
+
+int main(){
+
+int msqid;
+int msgflg = IPC_CREAT | 0666;
+int i;
+char productos[4] = {'M', 'L', 'S', 'G'};
+key_t keyCola;
+msgbuf sbuf;
+size_t buf_length
+
+srand (time (NULL));
+
+keyCola = ftok(".", 'C');  //Obtiene id de la cola
+
+if ((msqid = msgget(keyCola, msgflg)) < 0){
+        perror("msgget");
+        exit(1);
+}
+
+//Envia mensaje
+
+sbuf.mtype = 1;
+
+enviar_mensaje = strcpy(sbuf.mtext, "Se enviara a sembrar: ");
+
+buf_length = strlen(sbuf.mtext)+1;
+
+if(msgsnd(msqid, &sbuf, buf_length, IPC_NOWAIT) < 0){
+  perror("msgsnd");
+  exit(1);
+}
+
+
+for(i = 0; i < 15; ){
+  prod = rand() % 4;
+  if(prod == 2){
+    for(i = 0; i < 3; i++){
+      enviar_mensaje;
+    }
+    i+= 3;
+  }
+  else{
+    enviar_mensaje;
+    i++;
+  }
+}
+
+
+
+}

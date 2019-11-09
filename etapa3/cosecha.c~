@@ -1,0 +1,31 @@
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+#include <stdio.h>
+
+#define MSGSZ 128
+
+struct msgbuf{
+  long mtype;
+  char mtext[MSGSZ];
+};
+
+int main(){
+
+int msqid;
+key_t keyCola;
+message_buf rbuf;
+
+//Obtiene id de la cola
+
+if((msqid = msgget(keyCola, 0666))< 0){
+  perror("msgget");
+  exit(1);
+}
+
+//Recibe mensaje
+
+if (msgrv(msqid, &rbuf, MSGSZ, 1, 0) < 0){
+  perror("msgrcv");
+  exit(1);
+}
