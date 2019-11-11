@@ -47,6 +47,7 @@ int main (int argc, char *argv[])
 	if (semctl(semid, 4, SETVAL, arg) == -1) mostrarError("inicializandosem4");
 
 	while(pid!=0 && nroIte!=0){
+		
 		srand(getpid());
 		tipoVehiculo=rand()%2;
 		origen=rand()%4;
@@ -57,7 +58,8 @@ int main (int argc, char *argv[])
 		} else {
 			nroVehiculo[1]++;
 		}
-			pid=fork();
+		
+		pid=fork();
 		
 		while(destino==origen){
 			destino=rand()%4;
