@@ -16,8 +16,7 @@ union semun {
 	int              val;    /* Value for SETVAL */
 	struct semid_ds *buf;    /* Buffer for IPC_STAT, IPC_SET */
 	unsigned short  *array;  /* Array for GETALL, SETALL */
-	struct seminfo  *__buf;  /* Buffer for IPC_INFO
-                                           (Linux-specific) */
+	struct seminfo  *__buf;  /* Buffer for IPC_INFO */
 };
 
 void mostrarError(char palabra[]) {
@@ -52,7 +51,6 @@ int main(int argc, char *argv[]) {
 	opcion = opcion - 1;
 
 //conectar con semaforos:
-
 	key_t keysem;
 	int semid;
 
@@ -80,10 +78,7 @@ int main(int argc, char *argv[]) {
 	strcat(segptr, "X");
 	printf("SELLO: %s\n", segptr);
 
-
-
 //eliminar semaforo
-
 	if (strlen(segptr) > 3) {
 		union semun arg2;
 		if (shmctl(shmid, IPC_RMID, 0) == -1) mostrarError("borrandomemoriacompartida");
@@ -100,47 +95,11 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
-
-// void writeshm(int shmid, char *segptr, char *text) {
-// 	strcpy(segptr, text);
-// 	printf("Hecho...\n");
-// }
-// void readshm(int shmid, char *segptr) {
-// 	printf("valor de segptr: %s\n", segptr);
-// }
-// void removeshm(int shmid) {
-// 	shmctl(shmid, IPC_RMID, 0);
-// 	printf("Segmento marcado para borrado\n");
-// }
-// void changemode(int shmid, char *mode) {
-// 	struct shmid_ds myshmds;
-// 	/* Obtener valor actual de la estructura de datos interna */
-// 	shmctl(shmid, IPC_STAT, &myshmds);
-// 	/* Mostrar antiguos permisos */
-// 	printf("Antiguos permisos: %o\n", myshmds.shm_perm.mode);
-// 	/* Convertir y cargar el modo */
-// 	sscanf(mode, "%o", &myshmds.shm_perm.mode);
-// 	/* Actualizar el modo */
-// 	shmctl(shmid, IPC_SET, &myshmds);
-// 	printf("Nuevos permisos : %o\n", myshmds.shm_perm.mode);
-// }
-
-
-/*		case 'e': writeshm(shmid, segptr, argv[2]);
-		break;
-		case 'l': readshm(shmid, segptr);
-		break;
-		case 'b': removeshm(shmid);
-		break;
-		case 'm': changemode(shmid, argv[2]);
-		*/
-
 /* links
 
 http://users.cs.cf.ac.uk/Dave.Marshall/C/node27.html
 https://www.geeksforgeeks.org/ipc-shared-memory/
 https://stackoverflow.com/questions/2797813/how-to-convert-a-command-line-argument-to-int
 https://stackoverflow.com/questions/9748393/how-can-i-get-argv-as-int/38669018
-
 
 */
