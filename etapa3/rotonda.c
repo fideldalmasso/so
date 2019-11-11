@@ -7,7 +7,10 @@
 #include <sys/shm.h>
 #include <ctype.h>
 #include <string.h>
-#define SEGSIZE 100
+#include <time.h>
+#include <string.h>
+#include <sys/unistd.h>
+#include <unistd.h> //sleep close
 
 union semun 
 {
@@ -18,13 +21,16 @@ union semun
                                            (Linux-specific) */
 };
 
+void vehiculo (int semId, int origen, int destino, int tipoVehiculo, int nroVehiculo);
 void mostrarError (char palabra[]);
 void down (int idSem,int nroSem);
 void up (int idSem,int nroSem);
 
 int main (int argc, char *argv[])
 {
+	int pid=3;
 	int nroIte = atoi(argv[1]);
+	int tipoVehiculo, nroVehiculo[2]={0,0}, origen, destino;
 	key_t keysem;
 	int semid;
 
@@ -34,12 +40,38 @@ int main (int argc, char *argv[])
 	union semun arg;
 	arg.val = 1;
 	if (semctl(semid, 0, SETVAL, arg) == -1) mostrarError("inicializandosem0");
-	if (semctl(semid, 1, SETVAL, arg) == -1) mostrarError("inicializandosem1");º
+	if (semctl(semid, 1, SETVAL, arg) == -1) mostrarError("inicializandosem1");
 	if (semctl(semid, 2, SETVAL, arg) == -1) mostrarError("inicializandosem2");
 	if (semctl(semid, 3, SETVAL, arg) == -1) mostrarError("inicializandosem3");
 	arg.val = 8;
 	if (semctl(semid, 4, SETVAL, arg) == -1) mostrarError("inicializandosem4");
 
+	while(pid!=0 && nroIte!=0){
+		srand(getpid());
+		tipoVehiculo=rand()%2;
+		origen=rand()%4;
+		destino=rand()%4;
+
+		if(tipoVehiculo==0){
+			nroVehiculo[0]++;
+		} else {
+			nroVehiculo[1]++;
+		}
+			pid=fork();
+		
+		while(destino==origen){
+			destino=rand()%4;
+		}
+
+			if(tipoVehiculo==0){
+				vehiculo(semid,origen,destino,tipoVehiculo,nroVehiculo[0]);
+			} else {
+				vehiculo(semid,origen,destino,tipoVehiculo,nroVehiculo[1]);
+			}
+	
+
+		nroIte--;
+	}
 
 /*
 //crear o conectarse a segmento de memoria compartida:
@@ -82,45 +114,44 @@ int main (int argc, char *argv[])
 
 void vehiculo (int semId, int origen, int destino, int tipoVehiculo, int nroVehiculo)
 {
+	int semActual=origen;
+	char tipoVehiculoS[10];
 	if (tipoVehiculo==0)
 	{
-		tipoVehiculoS="CAMION";
+		strcpy(tipoVehiculoS,"CAMION\0");
 	}
 	else
 	{
-		tipoVehiculoS="COLECTIVO";
+		strcpy(tipoVehiculoS,"COLECTIVO\0");
 	}
 	
 	printf("Origen: %d, Destino: %d\n", origen, destino);
-	printf("%s: %d (%d) con destino desde: %d a %d", tipoVehiculoS, nroVehiculo, getpid(), origen, destino);
+	printf("%s: %d (%d) con destino desde: %d a %d\n", tipoVehiculoS, nroVehiculo, getpid(), origen, destino);
 
 	down(semId,4);
 
 	down(semId, origen);
 	sleep(1);
-	printf("%s: %d (%d) ingresando a la rotonda por: %d", tipoVehiculoS, nroVehiculo, getpid(),origen);
+	printf("%s: %d (%d) ingresando a la rotonda por: %d\n", tipoVehiculoS, nroVehiculo, getpid(),origen);
 	up(semId, origen);
 
-	printf("Circulando %s (%d) %d", tipoVehiculoS, getpid(), nroVehiculo);
+	printf("Circulando %s (%d) %d\n", tipoVehiculoS, getpid(), nroVehiculo);
 	sleep(2);
 	
-	//QUE HAY QUE HACER CON ESTO
 	for(int pos=origen; pos<destino-1; pos++)
 	{
 		down(semId, pos);
-		printf("%s (%d): %d cruzando por: %d", tipoVehiculoS, getpid(), nroVehiculo, semActual);
+		printf("%s (%d): %d cruzando por: %d\n", tipoVehiculoS, getpid(), nroVehiculo, pos);
 		up(semId, pos);
 	}
 
 
 	down(semId, destino);
 	sleep(1);
-	printf("%s: %d (%d) saliendo de la rotonda por: %d", tipoVehiculoS, nroVehiculo, getpid(),origen);
+	printf("%s: %d (%d) saliendo de la rotonda por: %d\n", tipoVehiculoS, nroVehiculo, getpid(),origen);
 	up(semId, destino);
 
 	up(semId,4);
-
-	return 0;
 }
 
 void mostrarError(char palabra[])
