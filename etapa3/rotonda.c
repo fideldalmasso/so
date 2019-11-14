@@ -27,13 +27,20 @@ void up (int idSem,int nroSem);
 
 int main (int argc, char *argv[])
 {
+
+	if(argc != 2)
+	{
+		printf("Se debe ingresar como parametro un numero positivo que indique la cantidad de procesos a generar\n");
+		exit(1);
+	}
+
 	int pid=3, nroIte = atoi(argv[1]), tipoVehiculo, origen, destino, semid;
 	key_t keysem;
 	union semun arg;
 
 	if ((keysem = ftok(".", 'A')) == -1) mostrarError("ftok");
 	if ((semid = semget(keysem, 5, IPC_CREAT |  0666 )) == -1) mostrarError("semget");
-
+	
 	arg.val=1;
 	if (semctl(semid, 0, SETVAL, arg) == -1) mostrarError("inicializandosem0");
 	if (semctl(semid, 1, SETVAL, arg) == -1) mostrarError("inicializandosem1");
@@ -44,8 +51,9 @@ int main (int argc, char *argv[])
 
 	while(pid!=0 && nroIte!=0)
 	{
-		srand(time(NULL)+getpid());
 		pid=fork();
+
+		srand(time(NULL)+getpid());
 
 		tipoVehiculo=rand()%2;
 		origen=rand()%4;
@@ -54,6 +62,7 @@ int main (int argc, char *argv[])
 		while(destino==origen){
 			destino=rand()%4;
 		}
+
 		if(tipoVehiculo==0)
 		{
 			vehiculo(semid,origen,destino,tipoVehiculo,nroIte);
@@ -62,14 +71,10 @@ int main (int argc, char *argv[])
 		{
 			vehiculo(semid,origen,destino,tipoVehiculo,nroIte);
 		}
-		if(pid==0 && nroIte==1)
-		{
-			arg.val = 0;
-			if (semctl(semid, 0, IPC_RMID, arg) == -1) mostrarError("borrandosemaforos");
-		}
-
 		nroIte--;
 	}
+
+	if (semctl(semid, 0, IPC_RMID) == -1) mostrarError("borrandosemaforos");
 
 	return 0;
 }
@@ -77,6 +82,7 @@ int main (int argc, char *argv[])
 void vehiculo (int semId, int origen, int destino, int tipoVehiculo, int nroVehiculo)
 {
 	char tipoVehiculoS[10];
+	int pos;
 	
 	if (tipoVehiculo==0)
 	{
@@ -93,19 +99,28 @@ void vehiculo (int semId, int origen, int destino, int tipoVehiculo, int nroVehi
 	down(semId,4);
 
 	down(semId, origen);
-	sleep(1);
+	//sleep(1);
 	printf("%s: %d (%d) ingresando a la rotonda por: %d\n", tipoVehiculoS, nroVehiculo, getpid(),origen);
 	up(semId, origen);
 
 	printf("Circulando %s (%d) %d\n", tipoVehiculoS, getpid(), nroVehiculo);
-	sleep(2);
+	//sleep(2);
 	
-	int pos=origen+1;
-	while(pos!=destino)
+
+	if(origen==3)
+	{
+		pos=0;
+	}
+	else
+	{
+		pos=origen+1;
+	}
+	while(pos != destino)
 	{
 		down(semId, pos);
 		printf("%s (%d): %d cruzando por: %d\n", tipoVehiculoS, getpid(), nroVehiculo, pos);
 		up(semId, pos);
+		
 		if(pos==3){
 			pos=0;
 		} 
@@ -116,7 +131,7 @@ void vehiculo (int semId, int origen, int destino, int tipoVehiculo, int nroVehi
 	}
 
 	down(semId, destino);
-	sleep(1);
+	//sleep(1);
 	printf("%s: %d (%d) saliendo de la rotonda por: %d\n", tipoVehiculoS, nroVehiculo, getpid(),destino);
 	up(semId, destino);
 
