@@ -56,21 +56,21 @@ int main(int argc, char *argv[]) {
 	if (*(segptr = shmat(shmid, 0, 0)) == -1) mostrarError("shmat");
 
 
-//concatenar Y al segmento
+//tras desbloquearse, concatenar Y al segmento
 
 	strcat(segptr, "Z");
 	printf("SELLO: %s\n", segptr);
 
-//eliminar semaforo
 
 	if (strlen(segptr) > 3) {
+//eliminar semaforo
 		union semun arg2;
 		if (shmctl(shmid, IPC_RMID, 0) == -1) mostrarError("borrandomemoriacompartida");
 		if (semctl(semid, 0, IPC_RMID, arg2) < 0) mostrarError("borrandoSEM");
-		//el argumento 2: semnum es ignorado con IPC_RMID
+
 	}
 	else {
-		// hacer up en el semaforo siguiente
+// hacer up en el semaforo siguiente
 		struct sembuf sb3 = {0, 1, 0};
 
 		if (semop(semid, &sb3, 1) == -1) mostrarError("error al hacer up en el sem1");

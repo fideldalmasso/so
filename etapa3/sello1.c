@@ -25,16 +25,36 @@ void mostrarError(char palabra[]) {
 	exit(1);
 }
 
+void mostrarYSalir(char palabra[]) {
+	printf("Error: %s\n", palabra);
+	exit(1);
+}
+
+
 //-------------------------
 int main(int argc, char *argv[]) {
+
+//validar entrada
+	if (argc == 1) mostrarYSalir("Debe pasar un argumento");
+
+	char *endptr = NULL;
+	long opcion = strtol(argv[1], &endptr, 10) - 1;
+
+	if (errno == ERANGE) mostrarError("strtol");
+	if (endptr == argv[1]) mostrarYSalir("No se encontró un número en la entrada");
+	if (opcion < 0 || opcion > 2) mostrarYSalir("Debe ingresar el número 1, 2 o 3");
+
+//conectar con semaforos:
+	key_t keysem;
+	int semid;
+
+	if ((keysem = ftok(".", 'A')) == -1) mostrarError("ftok");
+	if ((semid = semget(keysem, 3, IPC_CREAT |  0666 )) == -1) mostrarError("semget");
 
 //crear o conectarse a segmento de memoria compartida:
 	key_t key;
 	int shmid;
 	char *segptr;
-	char *endptr;
-
-	if (argc == 1) mostrarError("No Argument");
 
 	if ((key = ftok(".", 'S')) == -1) mostrarError("ftok");
 
@@ -45,17 +65,6 @@ int main(int argc, char *argv[]) {
 //vaciar contenido de memoria compartida
 	strcpy(segptr, "");
 
-	long opcion = strtol(argv[1], &endptr, 10);
-	// if(opcion==0) verificar error
-	//int opcion = atoi(argv[1]);
-	opcion = opcion - 1;
-
-//conectar con semaforos:
-	key_t keysem;
-	int semid;
-
-	if ((keysem = ftok(".", 'A')) == -1) mostrarError("ftok");
-	if ((semid = semget(keysem, 3, IPC_CREAT |  0666 )) == -1) mostrarError("semget");
 
 //inicializar los semaforos en 0
 	union semun arg;
@@ -64,8 +73,7 @@ int main(int argc, char *argv[]) {
 	if (semctl(semid, 1, SETVAL, arg) == -1) mostrarError("inicializandosem2");
 	if (semctl(semid, 2, SETVAL, arg) == -1) mostrarError("inicializandosem3");
 
-	printf("numero ingresado: %ld\n", opcion );
-// hacer up en el semaforo
+// hacer up en el semaforo indicado
 	struct sembuf sb1 = {opcion, 1, 0};
 
 	if (semop(semid, &sb1, 1) == -1) mostrarError("error al hacer up en el sem%d");
@@ -74,19 +82,20 @@ int main(int argc, char *argv[]) {
 	struct sembuf sb2 = {0, -1, 0};
 	if (semop(semid, &sb2, 1) == -1) mostrarError("error haciendo down en sem1");
 
-//concatenar X al segmento
+// tras desbloquearse, concatenar X al segmento
 	strcat(segptr, "X");
 	printf("SELLO: %s\n", segptr);
 
-//eliminar semaforo
 	if (strlen(segptr) > 3) {
+
+//eliminar semaforos
 		union semun arg2;
-		if (shmctl(shmid, IPC_RMID, 0) == -1) mostrarError("borrandomemoriacompartida");
+		if (shmctl(shmid, IPC_RMID, 0) == -1) mostrarError("borrandoMemoriaCompartida");
 		if (semctl(semid, 0, IPC_RMID, arg2) < 0) mostrarError("borrandoSEM");
-		//el argumento 2: semnum es ignorado con IPC_RMID
 	}
 	else {
-		// hacer up en el semaforo siguiente
+
+// hacer up en el semaforo siguiente
 		struct sembuf sb3 = {1, 1, 0};
 
 		if (semop(semid, &sb3, 1) == -1) mostrarError("error al hacer up en el sem2");
@@ -94,12 +103,3 @@ int main(int argc, char *argv[]) {
 
 	return 0;
 }
-
-/* links
-
-http://users.cs.cf.ac.uk/Dave.Marshall/C/node27.html
-https://www.geeksforgeeks.org/ipc-shared-memory/
-https://stackoverflow.com/questions/2797813/how-to-convert-a-command-line-argument-to-int
-https://stackoverflow.com/questions/9748393/how-can-i-get-argv-as-int/38669018
-
-*/
