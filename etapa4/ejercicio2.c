@@ -57,30 +57,34 @@ int main(int argc, char * argv[]) {
     entradaDirectorio=bloquePrimerPunteroDeInodo*1024;
 
 
-
     int recLen=0;
-    
-    do{
-    leerEImprimir2(fd1,entradaDirectorio,4,&inodoNum,"Numero Inodo:");
-    leerEImprimir2(fd1,entradaDirectorio+4,2,&recLen,"RecLen:");
-    inodo = 10240 + ((inodoNum-1) * 128);
     int modo, links, usr, grupo, tamanio, fecha, archivos;
-    leerEImprimir2(fd1,inodo,2,&modo,"Modo:");
-    leerEImprimir2(fd1,inodo+26,2,&links,"CantLinks:");
-    leerEImprimir2(fd1,inodo+2,2,&usr,"Usuario:");
-    leerEImprimir2(fd1,inodo+24,2,&grupo,"Grupo:");
-    leerEImprimir2(fd1,inodo+4,4,&tamanio,"Tamanio:");
-    leerEImprimir2(fd1,inodo+16,4,&fecha,"Fecha de ultima modific:");
-
     int nameLen;
     char nombre[255];
-    leerEImprimir2(fd1,entradaDirectorio+6,1,&nameLen,"NameLen:");
-    leerEImprimir1(fd1,entradaDirectorio+8,nameLen,nombre,"Nombre:");
 
-    entradaDirectorio += recLen;
-    //leer2(fd1,entradaDirectorio,4,&inodoNum);
-    printf("-------------------------------------------------\n");
-}while(inodoNum!=0);
+    
+    leer2(fd1,entradaDirectorio,4,&inodoNum);
+
+    while(inodoNum != 0){
+    
+	    imprimir2("Numero inodo",&inodoNum);
+	    leerEImprimir2(fd1,entradaDirectorio+4,2,&recLen,"RecLen:");
+	    inodo = 10240 + ((inodoNum-1) * 128);
+	    leerEImprimir2(fd1,inodo,2,&modo,"Modo:");
+	    leerEImprimir2(fd1,inodo+26,2,&links,"CantLinks:");
+	    leerEImprimir2(fd1,inodo+2,2,&usr,"Usuario:");
+	    leerEImprimir2(fd1,inodo+24,2,&grupo,"Grupo:");
+	    leerEImprimir2(fd1,inodo+4,4,&tamanio,"Tamanio:");
+	    leerEImprimir2(fd1,inodo+16,4,&fecha,"Fecha de ultima modific:");
+
+	    leerEImprimir2(fd1,entradaDirectorio+6,1,&nameLen,"NameLen:");
+	    leerEImprimir1(fd1,entradaDirectorio+8,nameLen,nombre,"Nombre:");
+
+	    entradaDirectorio += recLen;
+	    leer2(fd1,entradaDirectorio,4,&inodoNum);
+	    printf("-------------------------------------------------\n");
+
+	}
 
     return 0;
 
