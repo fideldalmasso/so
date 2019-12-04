@@ -1,5 +1,25 @@
-struct inodo;
-typedef struct inodo {
+struct fs;
+typedef struct fs{
+	int fd;
+	char nombreTexto[255];
+	int cantInodosLibres;
+	int cantInodos;
+	int idPrimerInodoNoReservado;
+	int tamanioInodoEnBytes;
+	int tamanioDeBloqueEnBytes;
+	int idBloquePrimerBloqueDeDatos;
+	int cantBloques;
+	int cantBloquesLibres;
+	int tamanioTotalEnBytes;
+
+	int tablaInodos;
+
+	int primerEntradaDirectorio;
+
+}FS;
+
+struct archivo;
+typedef struct archivo {
 	int entradaDirectorio;
 	int posInodo;
 	int recLen;
@@ -17,7 +37,7 @@ typedef struct inodo {
 	char grupoTexto[32];
 	char usuarioTexto[32];
 	char modoTexto[11];
-}Inodo;
+}Archivo;
 void fechaF(int segundos, char fechaS []);
 void grupoF(int gid, char grupoS []);
 void imprimir1(char texto1[], char texto2[]);

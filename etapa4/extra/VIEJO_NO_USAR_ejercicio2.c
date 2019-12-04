@@ -67,37 +67,34 @@ void obtenerModo(int modo, char salida[11]) {
 
 }
 
-void cargarInodo(int fd1, Inodo i) {
+Archivo cargarArchivo(int entradaDirectorio, FS s) {
 
-    i.posInodo =
-        i.recLen =
-            i.modo =
-                i.links =
-                    i.usuario =
-                        i.grupo =
-                            i.tamanio =
-                                i.fecha =
-                                    i.nameLen = 0;
+    Archivo i;
+    i.entradaDirectorio = entradaDirectorio;
 
-    leer2(fd1, i.entradaDirectorio + 4, 2, &i.recLen);
-    i.posInodo = 10240 + ((i.inodoNum - 1) * 128);
-    leer2(fd1, i.posInodo, 2, &i.modo);
+    i.posInodo = i.recLen = i.modo = i.links = 
+    i.usuario =i.grupo =  i.tamanio = i.fecha = i.nameLen = 0;
+
+    leer2(s.fd, i.entradaDirectorio + 4, 2, &i.recLen);
+    i.posInodo = s.tablaInodos + ((i.inodoNum - 1) * s.tamanioInodoEnBytes);
+    leer2(s.fd, i.posInodo, 2, &i.modo);
     obtenerModo(i.modo, i.modoTexto);
 
-    leer2(fd1, i.posInodo + 26, 2, &i.links);
-    leer2(fd1, i.posInodo + 4, 4, &i.tamanio);
+    leer2(s.fd, i.posInodo + 26, 2, &i.links);
+    leer2(s.fd, i.posInodo + 4, 4, &i.tamanio);
 
-    leer2(fd1, i.posInodo + 16, 4, &i.fecha);
+    leer2(s.fd, i.posInodo + 16, 4, &i.fecha);
     fechaF(i.fecha, i.fechaTexto);
 
-    leer2(fd1, i.posInodo + 24, 2, &i.grupo);
+    leer2(s.fd, i.posInodo + 24, 2, &i.grupo);
     grupoF(i.grupo, i.grupoTexto);
 
-    leer2(fd1, i.posInodo + 2, 2, &i.usuario);
+    leer2(s.fd, i.posInodo + 2, 2, &i.usuario);
     usuarioF(i.usuario, i.usuarioTexto);
 
-    leer2(fd1, i.entradaDirectorio + 6, 1, &i.nameLen);
-    leer1(fd1, i.entradaDirectorio + 8, i.nameLen, i.nombre);
+    leer2(s.fd, i.entradaDirectorio + 6, 1, &i.nameLen);
+    leer1(s.fd, i.entradaDirectorio + 8, i.nameLen, i.nombre);
+    return i;
 
 };
 //----------------------------------------------------
@@ -162,12 +159,12 @@ int main(int argc, char * argv[]) {
 
     //grup_desc empieza en el bloque 3, osea, en el byte 2048
     //2048 + 8 = 2056
-    leerEImprimir2(fd1, 2056, 4, &bloqueTablaInodos, "Bloque de la tabla de i-nodos");
-    bloqueTablaInodos *= 1024;
-    inodoRaiz = bloqueTablaInodos + 128; //para llegar al segundo inodo
-    iblockRaiz = inodoRaiz + 40; //para llegar al iblock del inodo raiz
+leerEImprimir2(fd1, 2056, 4, &bloqueTablaInodos, "Bloque de la tabla de i-nodos");
+bloqueTablaInodos *= 1024;
+inodoRaiz = bloqueTablaInodos + 128; //para llegar al segundo inodo
+iblockRaiz = inodoRaiz + 40; //para llegar al iblock del inodo raiz
 
-    leerEImprimir2(fd1, iblockRaiz, 4, &bloquePrimerPunteroDeInodo, "Bloque del primer puntero del inodo raiz");
+leerEImprimir2(fd1, iblockRaiz, 4, &bloquePrimerPunteroDeInodo, "Bloque del primer puntero del inodo raiz");
     entradaDirectorio = bloquePrimerPunteroDeInodo * 1024;
 
     leer2(fd1, entradaDirectorio, 4, &inodoNum);
