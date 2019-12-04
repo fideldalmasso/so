@@ -6,9 +6,28 @@
 #include <string.h> //strcpy
 #include <unistd.h> //pipe dup execve close fork
 #include <linux/fs.h> //pipe dup execve close fork
+#include <time.h>
+#include <grp.h>
+#include <pwd.h>
+
 
 //----------------------------------------------------
 
+void fechaF (int segundos, char fechaS []) {
+    time_t fechaAux = segundos;
+    struct tm *fechaAux2 = localtime(&fechaAux);
+    strftime(fechaS, 80, "%b %d %Y", fechaAux2);
+}
+
+void grupoF (int gid, char grupoS []) {
+    struct group* grupoAux = getgrgid(gid);
+    strcpy(grupoS, grupoAux->gr_name);
+}
+
+void usuarioF(int uid, char usuarioS []) {
+    struct passwd* usuarioAux = getpwuid(uid);
+    strcpy(usuarioS, usuarioAux->pw_name);
+}
 
 #define EXT2_S_IFMT 0xF000  /* format mask  */
 #define EXT2_S_IFSOCK   0xC000  /* socket */
@@ -42,58 +61,41 @@
 #define EXT2_S_IXOTH    0x0001  /* execute */
 
 
+void imprimirBits (int num);
 
-void obtenerFileType(int i_mode, char *c) {
+void obtenerModo(int modo, char salida[11]) {
 
-    int aux = EXT2_S_IFMT & i_mode;
+
+    char salida2[11] = "---------- ";
+    char salida3[11] = "-rwxrwxrwx ";
+
+    int aux = EXT2_S_IFMT & modo; //aplicamos el mask
 
     switch (aux) {
     case EXT2_S_IFDIR:
-        *c = 'd';
+        salida2[0] = 'd';
         break;
     case EXT2_S_IFREG:
-        *c = '-';
+        salida2[0] = '-';
         break;
     case EXT2_S_IFLNK:
-        *c = 'l';
+        salida2[0] = 'l';
         break;
     }
 
-}
-
-void obtenerPermisosUsuario(int i_mode, char salida[9]) {
-
-    char salida2[9] = {'-'};
-    int aux = EXT2_S_IRWXU & i_mode;
-    //if((aux >> )
-
-    switch (aux) {
-    case EXT2_S_IRUSR:
-        salida[0] = 'r';
-        break;
-    case EXT2_S_IWUSR:
-        salida[1] = 'w';
-        break;
-    case EXT2_S_IXUSR:
-        salida[2] = 'x';
-        break;
+    int i;
+    for (i = 0; i < 9; i++) {
+        if ((modo >> i) & 1)
+            salida2[9 - i] = salida3[9 - i];
     }
 
-
-    strcpy(salida,salida2);
+    salida2[10] = '\0';
+    strcpy(salida, salida2);
 
 }
-
-
-
-
-
-
 
 
 //----------------------------------------------------
-
-
 
 
 void mostrarError(char texto[]) {
@@ -103,7 +105,7 @@ void mostrarError(char texto[]) {
 }
 void imprimir1(char texto1[], char texto2[]) { //para imprimir arreglos de char formateados
     printf("%-40s", texto1);
-    printf("%10s\n", texto2);
+    printf("%12s\n", texto2);
 }
 void imprimir2(char texto1[], int * numero) { //para imprimir int formateados
     printf("%-40s", texto1);
@@ -112,6 +114,7 @@ void imprimir2(char texto1[], int * numero) { //para imprimir int formateados
 void leer1(int fd, int offset, int bytes, char buffer[]) {
     if (lseek(fd, offset, SEEK_SET) == -1) mostrarError("lseek");
     if (read(fd, buffer, bytes) == -1) mostrarError("read");
+    buffer[bytes] = '\0';
 }
 void leer2(int fd, int offset, int bytes, int *buffer) {
     if (lseek(fd, offset, SEEK_SET) == -1) mostrarError("lseek");
@@ -122,8 +125,6 @@ void leer3(int fd, int offset, int bytes, u_int16_t *buffer) {
     if (read(fd, buffer, bytes) == -1) mostrarError("read");
 }
 
-
-
 void leerEImprimir1(int fd, int offset, int bytes, char buffer[], char texto[]) {
     leer1(fd, offset, bytes, buffer);
     imprimir1(texto, buffer);
@@ -132,6 +133,19 @@ void leerEImprimir2(int fd, int offset, int bytes, int *buffer, char texto[]) {
     leer2(fd, offset, bytes, buffer);
     imprimir2(texto, buffer);
 }
+void imprimirBits (int num) {
+    int i, bit;
+    for (i = 0; i < 32; i++) {
+        printf("%-3d", i);
+    }
+    printf("\n");
+    for (i = 0; i < 32; i++) {
+        bit = (num >> i) & 1;
+        printf("%-3d", bit);
+    }
+    printf("\n");
+}
+
 
 int main(int argc, char * argv[]) {
 
@@ -160,32 +174,45 @@ int main(int argc, char * argv[]) {
         int recLen = 0;
         int modo = 0, links = 0, usr = 0, grupo = 0, tamanio = 0, fecha = 0, archivos = 0;
         int nameLen = 0;
-        char nombre[255] = "";
+        char nombre[255] = {' '};
 
         imprimir2("Numero inodo", &inodoNum);
         leerEImprimir2(fd1, entradaDirectorio + 4, 2, &recLen, "RecLen:");
         inodo = 10240 + ((inodoNum - 1) * 128);
-        leerEImprimir2(fd1, inodo, 2, &modo, "Modo:");
+        leer2(fd1, inodo, 2, &modo);
+        // imprimirBits(modo);
         //--------------tipoArchivo
-        char c[1];
-        obtenerFileType(modo, &c[0]);
-        imprimir1("TipoDeArchivo:", c);
+        char modoTexto[11] = "           ";
+        obtenerModo(modo, modoTexto);
+        imprimir1("ModoTexto:", modoTexto);
         //--------------permisosUsuario
         int aux = EXT2_S_IRWXU & modo;
-        printf("PermisosUsrHex: %x\n", aux);
-        printf("PermisosUsrDec: %d\n", aux);
+        // printf("PermisosUsrHex: %x\n", aux);
+        //printf("PermisosUsrDec: %d\n", aux);
+        //  imprimirBits(aux);
 
 
         int aux2 = EXT2_S_IRWXG & modo;
-        printf("PermisosGrupoHex: %x\n", aux2);
-        printf("PermisosGrupoDec: %d\n", aux2);
-
+        // printf("PermisosGrupoHex: %x\n", aux2);
+        //printf("PermisosGrupoDec: %d\n", aux2);
+        // imprimirBits(aux2);
 
         leerEImprimir2(fd1, inodo + 26, 2, &links, "CantLinks:");
-        leerEImprimir2(fd1, inodo + 2, 2, &usr, "Usuario:");
-        leerEImprimir2(fd1, inodo + 24, 2, &grupo, "Grupo:");
         leerEImprimir2(fd1, inodo + 4, 4, &tamanio, "Tamanio:");
-        leerEImprimir2(fd1, inodo + 16, 4, &fecha, "Fecha de ultima modific:");
+        char fs[32];
+        char gid[32];
+        char nid[32];
+        leer2(fd1, inodo + 16, 4, &fecha);
+        fechaF(fecha, fs);
+        imprimir1("Fecha:", fs);
+
+        leer2(fd1, inodo + 24, 2, &grupo);
+        grupoF(grupo, gid);
+        imprimir1("Grp:", gid);
+
+        leer2(fd1, inodo + 2, 2, &usr);
+        usuarioF(usr, nid);
+        imprimir1("Usr:", nid);
 
         leerEImprimir2(fd1, entradaDirectorio + 6, 1, &nameLen, "NameLen:");
         leerEImprimir1(fd1, entradaDirectorio + 8, nameLen, nombre, "Nombre:");
