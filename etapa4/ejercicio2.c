@@ -4,13 +4,21 @@
 #include <stdio.h>
 #include <stdlib.h> //exit
 #include <string.h> //strcpy
-#include <unistd.h> //pipe dup execve close fork
-#include <linux/fs.h> //pipe dup execve close fork
+#include <unistd.h> //close 
+#include <linux/fs.h>
 #include <time.h>
 #include <grp.h>
 #include <pwd.h>
+#include "buddyFS.h"
 
-
+#define EXT2_S_IFMT     0xF000  /* format mask  */
+#define EXT2_S_IFSOCK   0xC000  /* socket */
+#define EXT2_S_IFLNK    0xA000  /* symbolic link */
+#define EXT2_S_IFREG    0x8000  /* regular file */
+#define EXT2_S_IFBLK    0x6000  /* block device */
+#define EXT2_S_IFDIR    0x4000  /* directory */
+#define EXT2_S_IFCHR    0x2000  /* character device */
+#define EXT2_S_IFIFO    0x1000  /* fifo */
 //----------------------------------------------------
 
 void fechaF (int segundos, char fechaS []) {
@@ -29,42 +37,7 @@ void usuarioF(int uid, char usuarioS []) {
     strcpy(usuarioS, usuarioAux->pw_name);
 }
 
-#define EXT2_S_IFMT 0xF000  /* format mask  */
-#define EXT2_S_IFSOCK   0xC000  /* socket */
-#define EXT2_S_IFLNK    0xA000  /* symbolic link */
-#define EXT2_S_IFREG    0x8000  /* regular file */
-#define EXT2_S_IFBLK    0x6000  /* block device */
-#define EXT2_S_IFDIR    0x4000  /* directory */
-#define EXT2_S_IFCHR    0x2000  /* character device */
-#define EXT2_S_IFIFO    0x1000  /* fifo */
-
-// Note that these bits are not mutually exclusive, so simply testing
-// e.g. if (i_mode & EXT2_S_IFLNK) doesn't work. That will return true on
-// regular files, since EXT2_S_IFLNK == EXT2_S_IFREG | EXT2_S_IFCHR!
-
-
-/* inode i_mode flags: permission bits */
-#define EXT2_S_ISUID    0x0800  /* SUID */
-#define EXT2_S_ISGID    0x0400  /* SGID */
-#define EXT2_S_ISVTX    0x0200  /* sticky bit */
-#define EXT2_S_IRWXU    0x01C0  /* user access rights mask */
-#define EXT2_S_IRUSR    0x0100  /* read */
-#define EXT2_S_IWUSR    0x0080  /* write */
-#define EXT2_S_IXUSR    0x0040  /* execute */
-#define EXT2_S_IRWXG    0x0038  /* group access rights mask */
-#define EXT2_S_IRGRP    0x0020  /* read */
-#define EXT2_S_IWGRP    0x0010  /* write */
-#define EXT2_S_IXGRP    0x0008  /* execute */
-#define EXT2_S_IRWXO    0x0007  /* others access rights mask */
-#define EXT2_S_IROTH    0x0004  /* read */
-#define EXT2_S_IWOTH    0x0002  /* write */
-#define EXT2_S_IXOTH    0x0001  /* execute */
-
-
-void imprimirBits (int num);
-
 void obtenerModo(int modo, char salida[11]) {
-
 
     char salida2[11] = "---------- ";
     char salida3[11] = "-rwxrwxrwx ";
@@ -120,10 +93,6 @@ void leer2(int fd, int offset, int bytes, int *buffer) {
     if (lseek(fd, offset, SEEK_SET) == -1) mostrarError("lseek");
     if (read(fd, buffer, bytes) == -1) mostrarError("read");
 }
-void leer3(int fd, int offset, int bytes, u_int16_t *buffer) {
-    if (lseek(fd, offset, SEEK_SET) == -1) mostrarError("lseek");
-    if (read(fd, buffer, bytes) == -1) mostrarError("read");
-}
 
 void leerEImprimir1(int fd, int offset, int bytes, char buffer[], char texto[]) {
     leer1(fd, offset, bytes, buffer);
@@ -149,9 +118,8 @@ void imprimirBits (int num) {
 
 int main(int argc, char * argv[]) {
 
-    char buffer1[16]; //buffer de texto
     int tablaInodos; //buffer de int
-    int primerPunteroDeInodo = 0, bloquePrimerPunteroDeInodo = 0, entradaDirectorio = 0;
+    int bloquePrimerPunteroDeInodo = 0, entradaDirectorio = 0;
     int inodoNum = 0;
     int fd1 = open("extra/lab_fs", O_RDONLY);
     if (fd1 == -1) mostrarError("error abriendo");
@@ -169,58 +137,43 @@ int main(int argc, char * argv[]) {
     leer2(fd1, entradaDirectorio, 4, &inodoNum);
     printf("%d-----------------------\n", entradaDirectorio);
     int contador = 0;
+    printf("%-8s %-16s %-6s %-8s %-8s %-8s %-16s %-16s\n", "Inodo", "Modo", "Links", "Usr", "Grp", "Tamanio", "Fecha", "Archivos");
+
     while (contador != 2) {
         int inodo = 0;
         int recLen = 0;
-        int modo = 0, links = 0, usr = 0, grupo = 0, tamanio = 0, fecha = 0, archivos = 0;
+        int modo = 0, links = 0, usr = 0, grupo = 0, tamanio = 0, fecha = 0;
         int nameLen = 0;
         char nombre[255] = {' '};
 
-        imprimir2("Numero inodo", &inodoNum);
-        leerEImprimir2(fd1, entradaDirectorio + 4, 2, &recLen, "RecLen:");
+        leer2(fd1, entradaDirectorio + 4, 2, &recLen);
         inodo = 10240 + ((inodoNum - 1) * 128);
         leer2(fd1, inodo, 2, &modo);
-        // imprimirBits(modo);
-        //--------------tipoArchivo
         char modoTexto[11] = "           ";
         obtenerModo(modo, modoTexto);
-        imprimir1("ModoTexto:", modoTexto);
-        //--------------permisosUsuario
-        int aux = EXT2_S_IRWXU & modo;
-        // printf("PermisosUsrHex: %x\n", aux);
-        //printf("PermisosUsrDec: %d\n", aux);
-        //  imprimirBits(aux);
 
-
-        int aux2 = EXT2_S_IRWXG & modo;
-        // printf("PermisosGrupoHex: %x\n", aux2);
-        //printf("PermisosGrupoDec: %d\n", aux2);
-        // imprimirBits(aux2);
-
-        leerEImprimir2(fd1, inodo + 26, 2, &links, "CantLinks:");
-        leerEImprimir2(fd1, inodo + 4, 4, &tamanio, "Tamanio:");
+        leer2(fd1, inodo + 26, 2, &links);
+        leer2(fd1, inodo + 4, 4, &tamanio);
         char fs[32];
         char gid[32];
         char nid[32];
         leer2(fd1, inodo + 16, 4, &fecha);
         fechaF(fecha, fs);
-        imprimir1("Fecha:", fs);
 
         leer2(fd1, inodo + 24, 2, &grupo);
         grupoF(grupo, gid);
-        imprimir1("Grp:", gid);
 
         leer2(fd1, inodo + 2, 2, &usr);
         usuarioF(usr, nid);
-        imprimir1("Usr:", nid);
 
-        leerEImprimir2(fd1, entradaDirectorio + 6, 1, &nameLen, "NameLen:");
-        leerEImprimir1(fd1, entradaDirectorio + 8, nameLen, nombre, "Nombre:");
+        leer2(fd1, entradaDirectorio + 6, 1, &nameLen);
+        leer1(fd1, entradaDirectorio + 8, nameLen, nombre);
+
+        printf("%-8d %-16s %-6d %-8s %-8s %-8d %-16s %-16s\n", inodoNum, modoTexto, links, nid, gid, tamanio, fs, nombre);
 
         entradaDirectorio += recLen;
         leer2(fd1, entradaDirectorio, 4, &inodoNum);
         if (inodoNum == 11) contador++;
-        printf("-------------------------------------------------\n");
 
     }
     close(fd1);
@@ -228,3 +181,14 @@ int main(int argc, char * argv[]) {
     return 0;
 
 }
+
+/*
+Links
+https://www.win.tue.nl/~aeb/linux/fs/ext2/ext2.html#I-UID
+http://ext2read.sourceforge.net/old/ext2fs.htm
+https://github.com/exscape/exscapeOS/blob/master/src/include/kernel/ext2.h
+https://stackoverflow.com/questions/10493411/what-is-bit-masking
+http://homepage.smc.edu/morgan_david/cs40/analyze-ext2.htm
+https://codeforwin.org/2016/01/c-program-to-get-value-of-nth-bit-of-number.html
+http://blog.olkie.com/2013/11/05/online-c-function-prototype-header-generator-tool/
+*/
