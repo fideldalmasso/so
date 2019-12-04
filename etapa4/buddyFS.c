@@ -54,6 +54,30 @@ void leerEImprimir2(int fd, int offset, int bytes, int *buffer, char texto[]) {
     imprimir2(texto, buffer);
 }
 
+
+
+void imprimirBits (int num) {
+    int i, bit;
+    for (i = 0; i < 32; i++) {
+        printf("%-3d", i);
+    }
+    printf("\n");
+    for (i = 0; i < 32; i++) {
+        bit = (num >> i) & 1;
+        printf("%-3d", bit);
+    }
+    printf("\n");
+}
+
+
+void mostrarOpciones(){
+
+    printf("Modo de uso\nbuddyFS -s\nbuddyFS -l\nbuddyFS -b tamanioNube\n");
+    exit(0);
+}
+
+
+//ejercicio1------------------------------------------------------------------------
 FS cargarFS(int fd1) {
     FS s;
     s.fd = fd1;
@@ -64,7 +88,7 @@ FS cargarFS(int fd1) {
         exit(1);
     }
 
-    leer1(fd1, 1024 + 120, 16, s.nombreTexto);
+    leer1(fd1, 1024 + 120, 16, s.nombreVolumenTexto);
     leer2(fd1, 1024, 4, &s.cantInodos);
     leer2(fd1, 1024 + 16, 4, &s.cantInodosLibres);
     leer2(fd1, 1024 + 84, 4, &s.idPrimerInodoNoReservado);
@@ -91,25 +115,11 @@ FS cargarFS(int fd1) {
 
 }
 
-void imprimirBits (int num) {
-    int i, bit;
-    for (i = 0; i < 32; i++) {
-        printf("%-3d", i);
-    }
-    printf("\n");
-    for (i = 0; i < 32; i++) {
-        bit = (num >> i) & 1;
-        printf("%-3d", bit);
-    }
-    printf("\n");
-}
-
-//------------------------------------------------------------------------
 void ejercicio1(FS s) {
 
 
     imprimir1("Sistema de archivos tipo:", "EXT2");
-    imprimir1("Nombre del volumen:", s.nombreTexto);
+    imprimir1("Nombre del volumen:", s.nombreVolumenTexto);
     imprimir2("Cantidad de i-nodos:", &s.cantInodos);
     imprimir2("Cantidad de i-nodos libres:", &s.cantInodosLibres);
     imprimir2("Primer i-nodo no reservado:", &s.idPrimerInodoNoReservado);
@@ -121,7 +131,8 @@ void ejercicio1(FS s) {
     imprimir2("Tamanio total en disco:", &s.tamanioTotalEnBytes);
 
 }
-//------------------------------------------------------------------------
+
+//ejercicio2------------------------------------------------------------------------
 void fechaF (int segundos, char fechaS []) {
     time_t fechaAux = segundos;
     struct tm *fechaAux2 = localtime(&fechaAux);
@@ -173,32 +184,32 @@ Archivo cargarArchivo(int entradaDirectorio, FS s) {
     Archivo i;
     i.entradaDirectorio = entradaDirectorio;
 
-    i.posInodo = i.recLen = i.modo = i.links =
+    i.inodo = i.recLen = i.modo = i.cantLinks =
                                          i.usuario = i.grupo =  i.tamanio = i.fecha = i.nameLen = 0;
     char cadenaVacia[255] = {' '}; 
-    strncpy(i.nombre,cadenaVacia,255);
+    strncpy(i.nombreTexto,cadenaVacia,255);
 
-    leer2(s.fd, i.entradaDirectorio, 4, &i.inodoNum);
+    leer2(s.fd, i.entradaDirectorio, 4, &i.idInodo);
 
     leer2(s.fd, i.entradaDirectorio + 4, 2, &i.recLen);
-    i.posInodo = s.tablaInodos + ((i.inodoNum - 1) * s.tamanioInodoEnBytes);
-    leer2(s.fd, i.posInodo, 2, &i.modo);
+    i.inodo = s.tablaInodos + ((i.idInodo - 1) * s.tamanioInodoEnBytes);
+    leer2(s.fd, i.inodo, 2, &i.modo);
     obtenerModo(i.modo, i.modoTexto);
 
-    leer2(s.fd, i.posInodo + 26, 2, &i.links);
-    leer2(s.fd, i.posInodo + 4, 4, &i.tamanio);
+    leer2(s.fd, i.inodo + 26, 2, &i.cantLinks);
+    leer2(s.fd, i.inodo + 4, 4, &i.tamanio);
 
-    leer2(s.fd, i.posInodo + 16, 4, &i.fecha);
+    leer2(s.fd, i.inodo + 16, 4, &i.fecha);
     fechaF(i.fecha, i.fechaTexto);
 
-    leer2(s.fd, i.posInodo + 24, 2, &i.grupo);
+    leer2(s.fd, i.inodo + 24, 2, &i.grupo);
     grupoF(i.grupo, i.grupoTexto);
 
-    leer2(s.fd, i.posInodo + 2, 2, &i.usuario);
+    leer2(s.fd, i.inodo + 2, 2, &i.usuario);
     usuarioF(i.usuario, i.usuarioTexto);
 
     leer2(s.fd, i.entradaDirectorio + 6, 1, &i.nameLen);
-    leer1(s.fd, i.entradaDirectorio + 8, i.nameLen, i.nombre);
+    leer1(s.fd, i.entradaDirectorio + 8, i.nameLen, i.nombreTexto);
     return i;
 
 };
@@ -211,23 +222,18 @@ void ejercicio2(FS s) {
     while (1) {
 
         Archivo i = cargarArchivo(entradaDirectorio, s);
-        if (i.inodoNum == 11) {
+        if (i.idInodo == 11) {
             contador ++;
             if (contador == 2) break;
         }
-        printf("%-8d %-16s %-6d %-8s %-8s %-8d %-16s %-16s\n", i.inodoNum, i.modoTexto, i.links, i.usuarioTexto, i.grupoTexto, i.tamanio, i.fechaTexto, i.nombre);
+        printf("%-8d %-16s %-6d %-8s %-8s %-8d %-16s %-16s\n", i.idInodo, i.modoTexto, i.cantLinks, i.usuarioTexto, i.grupoTexto, i.tamanio, i.fechaTexto, i.nombreTexto);
         entradaDirectorio += i.recLen;
         aux++;
     }
 
 }
+//------------------------------------------------------------------------
 
-
-void mostrarOpciones(){
-
-    printf("Modo de uso\nbuddyFS -s\nbuddyFS -l\nbuddyFS -b tamanioNube\n");
-    exit(0);
-}
 
 int main(int argc, char * argv[]) {
 

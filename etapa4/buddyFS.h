@@ -1,7 +1,7 @@
 struct fs;
 typedef struct fs{
 	int fd;
-	char nombreTexto[255];
+	char nombreVolumenTexto[255];
 	int cantInodosLibres;
 	int cantInodos;
 	int idPrimerInodoNoReservado;
@@ -21,7 +21,7 @@ typedef struct fs{
 struct archivo;
 typedef struct archivo {
 	int entradaDirectorio;
-	int posInodo;
+	int inodo;
 	int recLen;
 	int modo;
 	int usuario;
@@ -29,10 +29,10 @@ typedef struct archivo {
 	int fecha;
 	int nameLen;
 	
-	int inodoNum;
-	int links;
+	int idInodo;
+	int cantLinks;
 	int tamanio;
-	char nombre[255];
+	char nombreTexto[255];
 	char fechaTexto[32];
 	char grupoTexto[32];
 	char usuarioTexto[32];
