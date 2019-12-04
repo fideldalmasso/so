@@ -1,3 +1,23 @@
+struct inodo;
+typedef struct inodo {
+	int entradaDirectorio;
+	int posInodo;
+	int recLen;
+	int modo;
+	int usuario;
+	int grupo;
+	int fecha;
+	int nameLen;
+	
+	int inodoNum;
+	int links;
+	int tamanio;
+	char nombre[255];
+	char fechaTexto[32];
+	char grupoTexto[32];
+	char usuarioTexto[32];
+	char modoTexto[11];
+}Inodo;
 void fechaF(int segundos, char fechaS []);
 void grupoF(int gid, char grupoS []);
 void imprimir1(char texto1[], char texto2[]);

@@ -67,7 +67,39 @@ void obtenerModo(int modo, char salida[11]) {
 
 }
 
+void cargarInodo(int fd1, Inodo i) {
 
+    i.posInodo =
+        i.recLen =
+            i.modo =
+                i.links =
+                    i.usuario =
+                        i.grupo =
+                            i.tamanio =
+                                i.fecha =
+                                    i.nameLen = 0;
+
+    leer2(fd1, i.entradaDirectorio + 4, 2, &i.recLen);
+    i.posInodo = 10240 + ((i.inodoNum - 1) * 128);
+    leer2(fd1, i.posInodo, 2, &i.modo);
+    obtenerModo(i.modo, i.modoTexto);
+
+    leer2(fd1, i.posInodo + 26, 2, &i.links);
+    leer2(fd1, i.posInodo + 4, 4, &i.tamanio);
+
+    leer2(fd1, i.posInodo + 16, 4, &i.fecha);
+    fechaF(i.fecha, i.fechaTexto);
+
+    leer2(fd1, i.posInodo + 24, 2, &i.grupo);
+    grupoF(i.grupo, i.grupoTexto);
+
+    leer2(fd1, i.posInodo + 2, 2, &i.usuario);
+    usuarioF(i.usuario, i.usuarioTexto);
+
+    leer2(fd1, i.entradaDirectorio + 6, 1, &i.nameLen);
+    leer1(fd1, i.entradaDirectorio + 8, i.nameLen, i.nombre);
+
+};
 //----------------------------------------------------
 
 
@@ -87,13 +119,11 @@ void imprimir2(char texto1[], int * numero) { //para imprimir int formateados
 void leer1(int fd, int offset, int bytes, char buffer[]) {
     if (lseek(fd, offset, SEEK_SET) == -1) mostrarError("lseek");
     if (read(fd, buffer, bytes) == -1) mostrarError("read");
-    buffer[bytes] = '\0';
 }
 void leer2(int fd, int offset, int bytes, int *buffer) {
     if (lseek(fd, offset, SEEK_SET) == -1) mostrarError("lseek");
     if (read(fd, buffer, bytes) == -1) mostrarError("read");
 }
-
 void leerEImprimir1(int fd, int offset, int bytes, char buffer[], char texto[]) {
     leer1(fd, offset, bytes, buffer);
     imprimir1(texto, buffer);
@@ -118,45 +148,56 @@ void imprimirBits (int num) {
 
 int main(int argc, char * argv[]) {
 
-    int tablaInodos; //buffer de int
-    int bloquePrimerPunteroDeInodo = 0, entradaDirectorio = 0;
-    int inodoNum = 0;
-    int fd1 = open("extra/lab_fs", O_RDONLY);
+    int fd1 = open("extra/imagen1.flp", O_RDONLY);
     if (fd1 == -1) mostrarError("error abriendo");
+
+    int bloqueTablaInodos = 0,
+        bloquePrimerPunteroDeInodo = 0,
+        entradaDirectorio = 0,
+        inodoNum = 0,
+        inodoRaiz = 0,
+        iblockRaiz = 0,
+        contador = 0;
+
 
     //grup_desc empieza en el bloque 3, osea, en el byte 2048
     //2048 + 8 = 2056
-    leerEImprimir2(fd1, 2056, 4, &tablaInodos, "Bloque de la tabla de i-nodos");
-    tablaInodos *= 1024;
-    int inodoRaiz = tablaInodos + 128; //para llegar al segundo inodo
-    int iblockRaiz = inodoRaiz + 40; //para llegar al iblock del inodo raiz
+    leerEImprimir2(fd1, 2056, 4, &bloqueTablaInodos, "Bloque de la tabla de i-nodos");
+    bloqueTablaInodos *= 1024;
+    inodoRaiz = bloqueTablaInodos + 128; //para llegar al segundo inodo
+    iblockRaiz = inodoRaiz + 40; //para llegar al iblock del inodo raiz
 
     leerEImprimir2(fd1, iblockRaiz, 4, &bloquePrimerPunteroDeInodo, "Bloque del primer puntero del inodo raiz");
     entradaDirectorio = bloquePrimerPunteroDeInodo * 1024;
 
     leer2(fd1, entradaDirectorio, 4, &inodoNum);
     printf("%d-----------------------\n", entradaDirectorio);
-    int contador = 0;
-    printf("%-8s %-16s %-6s %-8s %-8s %-8s %-16s %-16s\n", "Inodo", "Modo", "Links", "Usr", "Grp", "Tamanio", "Fecha", "Archivos");
 
+    printf("%-8s %-16s %-6s %-8s %-8s %-8s %-16s %-16s\n", "Inodo", "Modo", "Links", "Usr", "Grp", "Tamanio", "Fecha", "Archivos");
     while (contador != 2) {
-        int inodo = 0;
-        int recLen = 0;
-        int modo = 0, links = 0, usr = 0, grupo = 0, tamanio = 0, fecha = 0;
-        int nameLen = 0;
-        char nombre[255] = {' '};
+        int inodo = 0,
+            recLen = 0,
+            modo = 0,
+            links = 0,
+            usr = 0,
+            grupo = 0,
+            tamanio = 0,
+            fecha = 0,
+            nameLen = 0;
+        char nombre[255] = {' '},
+                           fs[32],
+                           gid[32],
+                           nid[32],
+                           modoTexto[11] = "           ";
 
         leer2(fd1, entradaDirectorio + 4, 2, &recLen);
         inodo = 10240 + ((inodoNum - 1) * 128);
         leer2(fd1, inodo, 2, &modo);
-        char modoTexto[11] = "           ";
         obtenerModo(modo, modoTexto);
 
         leer2(fd1, inodo + 26, 2, &links);
         leer2(fd1, inodo + 4, 4, &tamanio);
-        char fs[32];
-        char gid[32];
-        char nid[32];
+
         leer2(fd1, inodo + 16, 4, &fecha);
         fechaF(fecha, fs);
 
@@ -191,4 +232,5 @@ https://stackoverflow.com/questions/10493411/what-is-bit-masking
 http://homepage.smc.edu/morgan_david/cs40/analyze-ext2.htm
 https://codeforwin.org/2016/01/c-program-to-get-value-of-nth-bit-of-number.html
 http://blog.olkie.com/2013/11/05/online-c-function-prototype-header-generator-tool/
+https://stackoverflow.com/questions/228684/how-to-declare-a-structure-in-a-header-that-is-to-be-used-by-multiple-files-in-c
 */
