@@ -10,6 +10,7 @@
 #include <time.h>
 #include <grp.h>
 #include <pwd.h>
+#include <linux/magic.h>
 #include "buddyFS.h"
 //#include <sys/stat.h> //chmod
 //#include <stdbool.h> //bool
@@ -81,20 +82,20 @@ void mostrarOpciones(){
 FS cargarFS(int fd1) {
     FS s;
     s.fd = fd1;
-    struct statfs bufStat;
-    if (fstatfs(fd1, &bufStat) < 0 ) mostrarError("fstatfs");
-    if (bufStat.f_type != 0xef53) {
+    int magic;
+    leer2(fd1, 1024 + 56, 2, &magic);
+    if (magic != EXT2_SUPER_MAGIC) {
         printf("%s\n", "No hay sistema de archivos tipo EXT2");
         exit(1);
     }
 
-    leer1(fd1, 1024 + 120, 16, s.nombreVolumenTexto);
-    leer2(fd1, 1024, 4, &s.cantInodos);
-    leer2(fd1, 1024 + 16, 4, &s.cantInodosLibres);
-    leer2(fd1, 1024 + 84, 4, &s.idPrimerInodoNoReservado);
-    leer2(fd1, 1024 + 88, 2, &s.tamanioInodoEnBytes);
-    leer2(fd1, 1024 + 24, 4, &s.tamanioDeBloqueEnBytes);
-    s.tamanioDeBloqueEnBytes += 1024;
+    leer1(fd1, 1024 + 120, 16, s.nombreVolumenTexto);               
+    leer2(fd1, 1024, 4, &s.cantInodos);             
+    leer2(fd1, 1024 + 16, 4, &s.cantInodosLibres);              
+    leer2(fd1, 1024 + 84, 4, &s.idPrimerInodoNoReservado);              
+    leer2(fd1, 1024 + 88, 2, &s.tamanioInodoEnBytes);               
+    leer2(fd1, 1024 + 24, 4, &s.tamanioDeBloqueEnBytes);                
+    s.tamanioDeBloqueEnBytes += 1024;               
     leer2(fd1, 1024 + 20, 4, &s.idBloquePrimerBloqueDeDatos);
     leer2(fd1, 1024 + 4, 4, &s.cantBloques);
     leer2(fd1, 1024 + 12, 4, &s.cantBloquesLibres);
@@ -184,8 +185,8 @@ Archivo cargarArchivo(int entradaDirectorio, FS s) {
     Archivo i;
     i.entradaDirectorio = entradaDirectorio;
 
-    i.inodo = i.recLen = i.modo = i.cantLinks =
-                                         i.usuario = i.grupo =  i.tamanio = i.fecha = i.nameLen = 0;
+    i.inodo = i.recLen = i.modo = i.cantLinks = 0;
+    i.usuario = i.grupo =  i.tamanio = i.fecha = i.nameLen = 0;
     char cadenaVacia[255] = {' '}; 
     strncpy(i.nombreTexto,cadenaVacia,255);
 
@@ -222,10 +223,7 @@ void ejercicio2(FS s) {
     while (1) {
 
         Archivo i = cargarArchivo(entradaDirectorio, s);
-        if (i.idInodo == 11) {
-            contador ++;
-            if (contador == 2) break;
-        }
+        if ((entradaDirectorio + i.recLen) % s.tamanioDeBloqueEnBytes == 0) break;
         printf("%-8d %-16s %-6d %-8s %-8s %-8d %-16s %-16s\n", i.idInodo, i.modoTexto, i.cantLinks, i.usuarioTexto, i.grupoTexto, i.tamanio, i.fechaTexto, i.nombreTexto);
         entradaDirectorio += i.recLen;
         aux++;
