@@ -6,37 +6,50 @@
 #include <string.h> //strcpy
 #include <unistd.h> //pipe dup execve close fork
 #include <sys/vfs.h> //statfs
-#include <linux/fs.h>
 #include <time.h>
 #include <grp.h>
 #include <pwd.h>
 #include <linux/magic.h>
 #include <linux/fs.h>
 #include <linux/ext2_fs.h>
-#include "buddyFS.h"
-//#include <sys/stat.h> //chmod
-//#include <stdbool.h> //bool
-
 
 #define EXT2_S_IFMT     0xF000  /* format mask  */
 #define EXT2_S_IFLNK    0xA000  /* symbolic link */
 #define EXT2_S_IFREG    0x8000  /* regular file */
 #define EXT2_S_IFDIR    0x4000  /* directory */
-//#define EXT2_S_IFSOCK   0xC000  /* socket */
-//#define EXT2_S_IFBLK    0x6000  /* block device */
-//#define EXT2_S_IFCHR    0x2000  /* character device */
-//#define EXT2_S_IFIFO    0x1000  /* fifo */
+
+
+#define printf1(...) printf("%-40s%12s\n", __VA_ARGS__)
+#define printf2(...) printf("%-40s%12d\n", __VA_ARGS__)
+#define printf4(x) printf("%s\n",x)
+#define printf5(x) printf("%d\n",x)
+
+
+void fechaF(int segundos, char fechaS []);
+void grupoF(int gid, char grupoS []);
+void imprimir1(char texto1[], char texto2[]);
+void imprimir2(char texto1[], int * numero);
+void imprimirBits (int num);
+void leer1(int fd, int offset, int bytes, char buffer[]);
+void leer2(int fd, int offset, int bytes, int *buffer);
+void leerEImprimir1(int fd, int offset, int bytes, char buffer[], char texto[]);
+void leerEImprimir2(int fd, int offset, int bytes, int *buffer, char texto[]);
+void mostrarError(char texto[]);
+void obtenerModo(int modo, char salida[11]);
+void usuarioF(int uid, char usuarioS []);
+
+
 
 void mostrarError(char texto[]) {
     printf("Error número: %d\n", errno);
     perror(texto);
     exit(1);
 }
-void imprimir1(char texto1[], char texto2[]) { 
+void imprimir1(char texto1[], char texto2[]) {
     printf("%-40s", texto1);
     printf("%12s\n", texto2);
 }
-void imprimir2(char texto1[], int * numero) { 
+void imprimir2(char texto1[], int * numero) {
     printf("%-40s", texto1);
     printf("%12d\n", * numero);
 }
@@ -48,6 +61,7 @@ void leer2(int fd, int offset, int bytes, int *buffer) {
     if (lseek(fd, offset, SEEK_SET) == -1) mostrarError("lseek");
     if (read(fd, buffer, bytes) == -1) mostrarError("read");
 }
+
 void leerEImprimir1(int fd, int offset, int bytes, char buffer[], char texto[]) {
     leer1(fd, offset, bytes, buffer);
     imprimir1(texto, buffer);
@@ -73,65 +87,25 @@ void imprimirBits (int num) {
 }
 
 
-void mostrarOpciones(){
-
-    printf("Modo de uso\nbuddyFS -s\nbuddyFS -l\nbuddyFS -b tamanioNube\n");
-    exit(0);
-}
-
-
 //ejercicio1------------------------------------------------------------------------
-FS cargarFS(int fd1) {
-    FS s;
-    s.fd = fd1;
-    int magic;
-    leer2(fd1, 1024 + 56, 2, &magic);
-    if (magic != EXT2_SUPER_MAGIC) {
-        printf("%s\n", "No hay sistema de archivos tipo EXT2");
-        exit(1);
-    }
 
-    leer1(fd1, 1024 + 120, 16, s.nombreVolumenTexto);               
-    leer2(fd1, 1024, 4, &s.cantInodos);             
-    leer2(fd1, 1024 + 16, 4, &s.cantInodosLibres);              
-    leer2(fd1, 1024 + 84, 4, &s.idPrimerInodoNoReservado);              
-    leer2(fd1, 1024 + 88, 2, &s.tamanioInodoEnBytes);               
-    leer2(fd1, 1024 + 24, 4, &s.tamanioDeBloqueEnBytes);                
-    s.tamanioDeBloqueEnBytes += 1024;               
-    leer2(fd1, 1024 + 20, 4, &s.idBloquePrimerBloqueDeDatos);
-    leer2(fd1, 1024 + 4, 4, &s.cantBloques);
-    leer2(fd1, 1024 + 12, 4, &s.cantBloquesLibres);
-    s.tamanioTotalEnBytes = s.cantBloques * s.tamanioDeBloqueEnBytes;
-
-    int idBloqueTablaInodos;
-    int inodoRaiz;
-    int iblockRaiz;
-    int idBloqueDirectorioRaiz;
-    leer2(fd1, (1024 * 2) + 8, 4, &idBloqueTablaInodos);
-    s.tablaInodos = idBloqueTablaInodos * s.tamanioDeBloqueEnBytes;
-    inodoRaiz = s.tablaInodos + s.tamanioInodoEnBytes;
-    iblockRaiz = inodoRaiz + 40;
-    leer2(fd1, iblockRaiz, 4, &idBloqueDirectorioRaiz);
-    s.primerEntradaDirectorio = idBloqueDirectorioRaiz * s.tamanioDeBloqueEnBytes;
-
-    return s;
-
-}
-
-void ejercicio1(FS s) {
+void ejercicio1(struct ext2_super_block sb) {
 
 
-    imprimir1("Sistema de archivos tipo:", "EXT2");
-    imprimir1("Nombre del volumen:", s.nombreVolumenTexto);
-    imprimir2("Cantidad de i-nodos:", &s.cantInodos);
-    imprimir2("Cantidad de i-nodos libres:", &s.cantInodosLibres);
-    imprimir2("Primer i-nodo no reservado:", &s.idPrimerInodoNoReservado);
-    imprimir2("Tamanio estructura de un i-nodo:", &s.tamanioInodoEnBytes);
-    imprimir2("Tamanio de bloque:", &s.tamanioDeBloqueEnBytes);
-    imprimir2("Primer bloque de datos:", &s.idBloquePrimerBloqueDeDatos);
-    imprimir2("Cantidad de bloques:", &s.cantBloques);
-    imprimir2("Cantidad de bloques libres:", &s.cantBloquesLibres);
-    imprimir2("Tamanio total en disco:", &s.tamanioTotalEnBytes);
+    printf("-----------------INFORMACION DEL SB-----------------\n");
+
+    printf("%-40s%12s\n", "Sistema de archivos tipo:", "EXT2");
+    printf("%-40s%12s\n", "Nombre del volumen:", sb.s_volume_name);
+    printf("%-40s%12d\n", "Cantidad de i-nodos:", sb.s_inodes_count);
+    printf("%-40s%12d\n", "Cantidad de i-nodos libres:", sb.s_free_inodes_count);
+    printf("%-40s%12d\n", "Primer i-nodo no reservado:", sb.s_first_ino);
+    printf("%-40s%12d\n", "Tamanio estructura de un i-nodo:", sb.s_inode_size);
+    printf("%-40s%12d\n", "Tamanio de bloque:", sb.s_log_block_size + 1024);
+    printf("%-40s%12d\n", "Primer bloque de datos:", sb.s_first_data_block);
+    printf("%-40s%12d\n", "Cantidad de bloques:", sb.s_blocks_count);
+    printf("%-40s%12d\n", "Cantidad de bloques libres:", sb.s_free_blocks_count);
+    printf("%-40s%12d\n", "Tamanio total en disco:", sb.s_blocks_count * (sb.s_log_block_size + 1024));
+    printf("----------------------------------------------------\n");
 
 }
 
@@ -182,79 +156,99 @@ void obtenerModo(int modo, char salida[11]) {
 
 }
 
-Archivo cargarArchivo(int entradaDirectorio, FS s) {
+void ejercicio2(int fd1, struct ext2_super_block sb, struct ext2_group_desc gd, struct ext2_inode ti[]) {
 
-    Archivo i;
-    i.entradaDirectorio = entradaDirectorio;
+    int tamBloque = sb.s_log_block_size + 1024;
 
-    i.inodo = i.recLen = i.modo = i.cantLinks = 0;
-    i.usuario = i.grupo =  i.tamanio = i.fecha = i.nameLen = 0;
-    char cadenaVacia[255] = {' '}; 
-    strncpy(i.nombreTexto,cadenaVacia,255);
+    __le32 idBloqueDeEntradasRaiz = ti[1].i_block[0];
+    int entradaDirectorio = idBloqueDeEntradasRaiz * tamBloque;
+    printf("entradadir%d\n", entradaDirectorio);
 
-    leer2(s.fd, i.entradaDirectorio, 4, &i.idInodo);
-
-    leer2(s.fd, i.entradaDirectorio + 4, 2, &i.recLen);
-    i.inodo = s.tablaInodos + ((i.idInodo - 1) * s.tamanioInodoEnBytes);
-    leer2(s.fd, i.inodo, 2, &i.modo);
-    obtenerModo(i.modo, i.modoTexto);
-
-    leer2(s.fd, i.inodo + 26, 2, &i.cantLinks);
-    leer2(s.fd, i.inodo + 4, 4, &i.tamanio);
-
-    leer2(s.fd, i.inodo + 16, 4, &i.fecha);
-    fechaF(i.fecha, i.fechaTexto);
-
-    leer2(s.fd, i.inodo + 24, 2, &i.grupo);
-    grupoF(i.grupo, i.grupoTexto);
-
-    leer2(s.fd, i.inodo + 2, 2, &i.usuario);
-    usuarioF(i.usuario, i.usuarioTexto);
-
-    leer2(s.fd, i.entradaDirectorio + 6, 1, &i.nameLen);
-    leer1(s.fd, i.entradaDirectorio + 8, i.nameLen, i.nombreTexto);
-    return i;
-
-};
-
-void ejercicio2(FS s) {
-
-    int entradaDirectorio = s.primerEntradaDirectorio;
-    int contador = 0, aux=0;
     printf("%-8s %-16s %-6s %-8s %-8s %-8s %-16s %-16s\n", "Inodo", "Modo", "Links", "Usr", "Grp", "Tamanio", "Fecha", "Archivos");
     while (1) {
+        int inodo = 0, recLen = 0, nameLen = 0, filetype = 0;
+        char nombreTexto[255] = {' '};
+        char usuarioTexto[16] = {' '};
+        char grupoTexto[16] = {' '};
+        char fechaTexto[24] = {' '};
+        char modoTexto[11] = {' '};
 
-        Archivo i = cargarArchivo(entradaDirectorio, s);
-        if ((entradaDirectorio + i.recLen) % s.tamanioDeBloqueEnBytes == 0) break;
-        printf("%-8d %-16s %-6d %-8s %-8s %-8d %-16s %-16s\n", i.idInodo, i.modoTexto, i.cantLinks, i.usuarioTexto, i.grupoTexto, i.tamanio, i.fechaTexto, i.nombreTexto);
-        entradaDirectorio += i.recLen;
-        aux++;
+        if (lseek(fd1, entradaDirectorio, SEEK_SET) == -1) mostrarError("lseek");
+        if (read(fd1, &inodo, 4) == -1) mostrarError("read");
+        if (read(fd1, &recLen, 2) == -1) mostrarError("read");
+        if (read(fd1, &nameLen, 1) == -1) mostrarError("read");
+        if (read(fd1, &filetype, 1) == -1) mostrarError("read");
+        if (read(fd1, nombreTexto, nameLen) == -1) mostrarError("read");
+
+        obtenerModo(ti[inodo - 1].i_mode, modoTexto);
+        fechaF(ti[inodo - 1].i_mtime, fechaTexto);
+        grupoF(ti[inodo - 1].i_gid, grupoTexto);
+        usuarioF(ti[inodo - 1].i_uid, usuarioTexto);
+
+        printf("%-8d %-16s %-6d %-8s %-8s %-8d %-16s %-16s\n", inodo, modoTexto, ti[inodo - 1].i_links_count, usuarioTexto, grupoTexto, ti[inodo - 1].i_size, fechaTexto, nombreTexto);
+        if ((entradaDirectorio + recLen) % tamBloque == 0) break;
+        entradaDirectorio += recLen;
     }
 
 }
+
 //------------------------------------------------------------------------
 
 
 int main(int argc, char * argv[]) {
+    if (argc < 3) {
+        printf("Modo de uso\nbuddyFS [-s][-l][-b tamanioNube] /rutaimagen\n");
+        exit(0);
+    };
 
     int fd1;
-    if ((fd1 = open("extra/imagen1.flp", O_RDONLY) ) == -1) mostrarError("open");
+    if ((fd1 = open(argv[2], O_RDONLY) ) == -1) mostrarError("open");
 
-    FS s = cargarFS(fd1);
+    struct ext2_super_block * sb = malloc(1024);
+
+    if (lseek(fd1, 1024, SEEK_SET) == -1) mostrarError("lseek");
+    if (read(fd1, sb, 1024) == -1) mostrarError("read");
+
+    if (sb->s_magic != EXT2_SUPER_MAGIC) {
+        printf("%s\n", "No hay sistema de archivos tipo EXT2");
+        exit(1);
+    }
+    struct ext2_group_desc * gd = malloc(1024);
+    struct ext2_inode * i = (struct ext2_inode*)malloc(128);
+
+    if (lseek(fd1, 1024 * 2, SEEK_SET) == -1) mostrarError("lseek");
+    if (read(fd1, gd, 1024) == -1) mostrarError("read");
+
+    __le32  cantInodos = (sb->s_inodes_count) - (sb->s_free_inodes_count);
+
+    struct ext2_inode ti[184];             //tabla de inodos
+
+    int posTablaInodos = (gd->bg_inode_table * 1024);
+    int p;
+    for (p = 0; p < cantInodos; p++) {
+        if (lseek(fd1, posTablaInodos + (p * 128), SEEK_SET) == -1) mostrarError("lseek");
+        if (read(fd1, i, 128) == -1) mostrarError("read");
+        ti[p] = *i;
+
+    }
+
     int c;
 
-    if(argc==1) mostrarOpciones();
 
-    if ((c = getopt (argc, argv, "sl")) < 0) mostrarError("getopt");
+
+    if ((c = getopt (argc, argv, "slb")) < 0) mostrarError("getopt");
 
     switch (c) {
     case 's':
-        ejercicio1(s);
+        ejercicio1(*sb);
         break;
     case 'l':
-        ejercicio2(s);
+        ejercicio2(fd1, *sb, *gd, ti);
+        break;
+    case 'b':
         break;
     }
+
     return 0;
 
 }
@@ -270,4 +264,6 @@ http://homepage.smc.edu/morgan_david/cs40/analyze-ext2.htm
 https://codeforwin.org/2016/01/c-program-to-get-value-of-nth-bit-of-number.html
 http://blog.olkie.com/2013/11/05/online-c-function-prototype-header-generator-tool/
 https://stackoverflow.com/questions/228684/how-to-declare-a-structure-in-a-header-that-is-to-be-used-by-multiple-files-in-c
+http://www.mathcs.emory.edu/~cheung/Courses/255/Syllabus/2-C-adv-data/dyn-array.html
+https://www.geeksforgeeks.org/dynamic-memory-allocation-in-c-using-malloc-calloc-free-and-realloc/
 */
