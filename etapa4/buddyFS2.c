@@ -6,26 +6,28 @@
 #include <string.h> //strcpy
 #include <unistd.h> //pipe dup execve close fork
 #include <sys/vfs.h> //statfs
-#include <linux/fs.h>
 #include <time.h>
 #include <grp.h>
 #include <pwd.h>
 #include <linux/magic.h>
 #include <linux/fs.h>
 #include <linux/ext2_fs.h>
-#include "buddyFS.h"
-//#include <sys/stat.h> //chmod
-//#include <stdbool.h> //bool
+
+void fechaF(int segundos, char fechaS []);
+void grupoF(int gid, char grupoS []);
+void imprimir1(char texto1[], char texto2[]);
+void imprimir2(char texto1[], int * numero);
+void imprimirBits (int num);
+void leer1(int fd, int offset, int bytes, char buffer[]);
+void leer2(int fd, int offset, int bytes, int *buffer);
+void leer3(int fd, int offset, int bytes, struct *buffer);
+void leerEImprimir1(int fd, int offset, int bytes, char buffer[], char texto[]);
+void leerEImprimir2(int fd, int offset, int bytes, int *buffer, char texto[]);
+void mostrarError(char texto[]);
+void obtenerModo(int modo, char salida[11]);
+void usuarioF(int uid, char usuarioS []);
 
 
-#define EXT2_S_IFMT     0xF000  /* format mask  */
-#define EXT2_S_IFLNK    0xA000  /* symbolic link */
-#define EXT2_S_IFREG    0x8000  /* regular file */
-#define EXT2_S_IFDIR    0x4000  /* directory */
-//#define EXT2_S_IFSOCK   0xC000  /* socket */
-//#define EXT2_S_IFBLK    0x6000  /* block device */
-//#define EXT2_S_IFCHR    0x2000  /* character device */
-//#define EXT2_S_IFIFO    0x1000  /* fifo */
 
 void mostrarError(char texto[]) {
     printf("Error número: %d\n", errno);
@@ -45,6 +47,10 @@ void leer1(int fd, int offset, int bytes, char buffer[]) {
     if (read(fd, buffer, bytes) == -1) mostrarError("read");
 }
 void leer2(int fd, int offset, int bytes, int *buffer) {
+    if (lseek(fd, offset, SEEK_SET) == -1) mostrarError("lseek");
+    if (read(fd, buffer, bytes) == -1) mostrarError("read");
+}
+void leer3(int fd, int offset, int bytes, struct * buffer){
     if (lseek(fd, offset, SEEK_SET) == -1) mostrarError("lseek");
     if (read(fd, buffer, bytes) == -1) mostrarError("read");
 }
@@ -81,44 +87,7 @@ void mostrarOpciones(){
 
 
 //ejercicio1------------------------------------------------------------------------
-FS cargarFS(int fd1) {
-    FS s;
-    s.fd = fd1;
-    int magic;
-    leer2(fd1, 1024 + 56, 2, &magic);
-    if (magic != EXT2_SUPER_MAGIC) {
-        printf("%s\n", "No hay sistema de archivos tipo EXT2");
-        exit(1);
-    }
-
-    leer1(fd1, 1024 + 120, 16, s.nombreVolumenTexto);               
-    leer2(fd1, 1024, 4, &s.cantInodos);             
-    leer2(fd1, 1024 + 16, 4, &s.cantInodosLibres);              
-    leer2(fd1, 1024 + 84, 4, &s.idPrimerInodoNoReservado);              
-    leer2(fd1, 1024 + 88, 2, &s.tamanioInodoEnBytes);               
-    leer2(fd1, 1024 + 24, 4, &s.tamanioDeBloqueEnBytes);                
-    s.tamanioDeBloqueEnBytes += 1024;               
-    leer2(fd1, 1024 + 20, 4, &s.idBloquePrimerBloqueDeDatos);
-    leer2(fd1, 1024 + 4, 4, &s.cantBloques);
-    leer2(fd1, 1024 + 12, 4, &s.cantBloquesLibres);
-    s.tamanioTotalEnBytes = s.cantBloques * s.tamanioDeBloqueEnBytes;
-
-    int idBloqueTablaInodos;
-    int inodoRaiz;
-    int iblockRaiz;
-    int idBloqueDirectorioRaiz;
-    leer2(fd1, (1024 * 2) + 8, 4, &idBloqueTablaInodos);
-    s.tablaInodos = idBloqueTablaInodos * s.tamanioDeBloqueEnBytes;
-    inodoRaiz = s.tablaInodos + s.tamanioInodoEnBytes;
-    iblockRaiz = inodoRaiz + 40;
-    leer2(fd1, iblockRaiz, 4, &idBloqueDirectorioRaiz);
-    s.primerEntradaDirectorio = idBloqueDirectorioRaiz * s.tamanioDeBloqueEnBytes;
-
-    return s;
-
-}
-
-void ejercicio1(FS s) {
+void ejercicio1(struct ext2_super_block sb) {
 
 
     imprimir1("Sistema de archivos tipo:", "EXT2");
@@ -181,7 +150,7 @@ void obtenerModo(int modo, char salida[11]) {
     strcpy(salida, salida2);
 
 }
-
+/*
 Archivo cargarArchivo(int entradaDirectorio, FS s) {
 
     Archivo i;
@@ -216,8 +185,8 @@ Archivo cargarArchivo(int entradaDirectorio, FS s) {
     return i;
 
 };
-
-void ejercicio2(FS s) {
+*/
+void ejercicio2(struct ext2_group_desc gd) {
 
     int entradaDirectorio = s.primerEntradaDirectorio;
     int contador = 0, aux=0;
@@ -240,7 +209,13 @@ int main(int argc, char * argv[]) {
     int fd1;
     if ((fd1 = open("extra/imagen1.flp", O_RDONLY) ) == -1) mostrarError("open");
 
-    FS s = cargarFS(fd1);
+    struct ext2_super_block sb;
+    struct ext2_group_desc gd;
+    struct ext2_inode i;
+
+    leer3(fd1,1024,1024,ext2_super_block);
+    leer3(fd1,1024 * 2,1024,ext2_group_desc);
+
     int c;
 
     if(argc==1) mostrarOpciones();
@@ -249,10 +224,10 @@ int main(int argc, char * argv[]) {
 
     switch (c) {
     case 's':
-        ejercicio1(s);
+        ejercicio1(sb);
         break;
     case 'l':
-        ejercicio2(s);
+        ejercicio2(gd);
         break;
     }
     return 0;
