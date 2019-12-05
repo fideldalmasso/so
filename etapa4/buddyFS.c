@@ -1,4 +1,3 @@
-#include <errno.h> //errno
 #include <fcntl.h> //open 
 #include <getopt.h>
 #include <stdio.h>
@@ -41,7 +40,7 @@ void usuarioF(int uid, char usuarioS []);
 
 
 void mostrarError(char texto[]) {
-    printf("Error número: %d\n", errno);
+    printf("Error nΓΊmero: %d\n", errno);
     perror(texto);
     exit(1);
 }
@@ -169,7 +168,6 @@ void ejercicio2(int fd1, struct ext2_super_block sb, struct ext2_group_desc gd, 
     printf("%-8s %-16s %-6s %-8s %-8s %-8s %-16s %-16s\n", "Inodo", "Modo", "Links", "Usr", "Grp", "Tamanio", "Fecha", "Archivos");
     int i = 0;
     for(i=0;i<cantEntradasDirectorios;i++) {
-        char nombreTexto[255] = {' '};
         char usuarioTexto[16] = {' '};
         char grupoTexto[16] = {' '};
         char fechaTexto[24] = {' '};
@@ -182,9 +180,9 @@ void ejercicio2(int fd1, struct ext2_super_block sb, struct ext2_group_desc gd, 
 
         printf("%-8d %-16s %-6d %-8s %-8s %-8d %-16s %-16s\n", tde[i].inode, modoTexto, ti[tde[i].inode - 1].i_links_count, usuarioTexto, grupoTexto, ti[tde[i].inode - 1].i_size, fechaTexto, tde[i].name);
 
-        if ((entradaDirectorio + tde[i].rec_len) % tamBloque == 0) break;
-        entradaDirectorio += tde[i].rec_len;
-        i++;
+        //if ((entradaDirectorio + tde[i].rec_len) % tamBloque == 0) break;
+        //entradaDirectorio += tde[i].rec_len;
+        //i++;
     }
 
 }
@@ -226,30 +224,30 @@ int main(int argc, char * argv[]) {
         if (lseek(fd1, posTablaInodos + (p * 128), SEEK_SET) == -1) mostrarError("lseek");
         if (read(fd1, i, 128) == -1) mostrarError("read");
         ti[p] = *i;
-
     }
 
     int c;
 
     int tamBloque = sb->s_log_block_size + 1024;
-    __le32 idBloqueDeEntradasRaiz = ti[1]->i_block[0];
+    __le32 idBloqueDeEntradasRaiz = ti[1].i_block[0];
     int entradaDirectorio = idBloqueDeEntradasRaiz * tamBloque;
-
-    struct ext2_dir_entry * de = (struct ext2_dir_entry*)malloc(sizeof(struct ext2_dir_entry);
- //   struct ext2_dir_entry * de = malloc(sizeof(struct ext2_dir_entry);
-    struct ext2_dir_entry * tde[200];
-    int i =0;
+    struct ext2_dir_entry * de = malloc(sizeof(struct ext2_dir_entry));
+    struct ext2_dir_entry tde[200];
+    int n =0;
 	while (1) {
     	if (lseek(fd1, entradaDirectorio, SEEK_SET) == -1) mostrarError("lseek");
-        if (read(fd1, &de, sizeof(ext2_dir_entry)) == -1) mostrarError("read");
-        //if (read(fd1, &de, 255+8) == -1) mostrarError("read");
-        tde[i]=de;
-
+        if (read(fd1, de, sizeof(struct ext2_dir_entry)) == -1) mostrarError("read");
+//        if (read(fd1, &de, 255+8) == -1) mostrarError("read");
+        tde[n]=*de;
+	//printf2("recLen",de->rec_len);
+	//printf1("nombre",de->name);
         entradaDirectorio += de->rec_len;
-        if ((entradaDirectorio % tamBloque == 0) break;
-        i++;
+        if ((entradaDirectorio % tamBloque) == 0) break;
+        n++;
     }
-    cantEntradasDirectorios = i++;
+//    struct ext2_dir_entry * de = malloc(sizeof(struct ext2_dir_entry);
+    int cantEntradasDirectorios = n++;
+	printf2("cantdirectorios",cantEntradasDirectorios);
 
     if ((c = getopt (argc, argv, "slb")) < 0) mostrarError("getopt");
 
@@ -261,10 +259,12 @@ int main(int argc, char * argv[]) {
         ejercicio2(fd1, *sb, *gd, ti, tde, cantEntradasDirectorios);
         break;
     case 'b':
-    	ejercicio3(ti, tde);
+    	//ejercicio3(ti, tde, cantEntradasDirectorios);
         break;
     }
+/*
 
+*/
     return 0;
 
 }
