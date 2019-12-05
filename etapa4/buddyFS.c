@@ -156,38 +156,35 @@ void obtenerModo(int modo, char salida[11]) {
 
 }
 
-void ejercicio2(int fd1, struct ext2_super_block sb, struct ext2_group_desc gd, struct ext2_inode ti[]) {
+void ejercicio2(int fd1, struct ext2_super_block sb, struct ext2_group_desc gd, struct ext2_inode ti[], struct ext2_dir_entry tde[], int cantEntradasDirectorios) {
 
     int tamBloque = sb.s_log_block_size + 1024;
+
+    
 
     __le32 idBloqueDeEntradasRaiz = ti[1].i_block[0];
     int entradaDirectorio = idBloqueDeEntradasRaiz * tamBloque;
     printf("entradadir%d\n", entradaDirectorio);
 
     printf("%-8s %-16s %-6s %-8s %-8s %-8s %-16s %-16s\n", "Inodo", "Modo", "Links", "Usr", "Grp", "Tamanio", "Fecha", "Archivos");
-    while (1) {
-        int inodo = 0, recLen = 0, nameLen = 0, filetype = 0;
+    int i = 0;
+    for(i=0;i<cantEntradasDirectorios;i++) {
         char nombreTexto[255] = {' '};
         char usuarioTexto[16] = {' '};
         char grupoTexto[16] = {' '};
         char fechaTexto[24] = {' '};
         char modoTexto[11] = {' '};
+        
+        obtenerModo(ti[tde[i].inode - 1].i_mode, modoTexto);
+        fechaF(ti[tde[i].inode - 1].i_mtime, fechaTexto);
+        grupoF(ti[tde[i].inode - 1].i_gid, grupoTexto);
+        usuarioF(ti[tde[i].inode - 1].i_uid, usuarioTexto);
 
-        if (lseek(fd1, entradaDirectorio, SEEK_SET) == -1) mostrarError("lseek");
-        if (read(fd1, &inodo, 4) == -1) mostrarError("read");
-        if (read(fd1, &recLen, 2) == -1) mostrarError("read");
-        if (read(fd1, &nameLen, 1) == -1) mostrarError("read");
-        if (read(fd1, &filetype, 1) == -1) mostrarError("read");
-        if (read(fd1, nombreTexto, nameLen) == -1) mostrarError("read");
+        printf("%-8d %-16s %-6d %-8s %-8s %-8d %-16s %-16s\n", tde[i].inode, modoTexto, ti[tde[i].inode - 1].i_links_count, usuarioTexto, grupoTexto, ti[tde[i].inode - 1].i_size, fechaTexto, tde[i].name);
 
-        obtenerModo(ti[inodo - 1].i_mode, modoTexto);
-        fechaF(ti[inodo - 1].i_mtime, fechaTexto);
-        grupoF(ti[inodo - 1].i_gid, grupoTexto);
-        usuarioF(ti[inodo - 1].i_uid, usuarioTexto);
-
-        printf("%-8d %-16s %-6d %-8s %-8s %-8d %-16s %-16s\n", inodo, modoTexto, ti[inodo - 1].i_links_count, usuarioTexto, grupoTexto, ti[inodo - 1].i_size, fechaTexto, nombreTexto);
-        if ((entradaDirectorio + recLen) % tamBloque == 0) break;
-        entradaDirectorio += recLen;
+        if ((entradaDirectorio + tde[i].rec_len) % tamBloque == 0) break;
+        entradaDirectorio += tde[i].rec_len;
+        i++;
     }
 
 }
@@ -234,7 +231,25 @@ int main(int argc, char * argv[]) {
 
     int c;
 
+    int tamBloque = sb->s_log_block_size + 1024;
+    __le32 idBloqueDeEntradasRaiz = ti[1]->i_block[0];
+    int entradaDirectorio = idBloqueDeEntradasRaiz * tamBloque;
 
+    struct ext2_dir_entry * de = (struct ext2_dir_entry*)malloc(sizeof(struct ext2_dir_entry);
+ //   struct ext2_dir_entry * de = malloc(sizeof(struct ext2_dir_entry);
+    struct ext2_dir_entry * tde[200];
+    int i =0;
+	while (1) {
+    	if (lseek(fd1, entradaDirectorio, SEEK_SET) == -1) mostrarError("lseek");
+        if (read(fd1, &de, sizeof(ext2_dir_entry)) == -1) mostrarError("read");
+        //if (read(fd1, &de, 255+8) == -1) mostrarError("read");
+        tde[i]=de;
+
+        entradaDirectorio += de->rec_len;
+        if ((entradaDirectorio % tamBloque == 0) break;
+        i++;
+    }
+    cantEntradasDirectorios = i++;
 
     if ((c = getopt (argc, argv, "slb")) < 0) mostrarError("getopt");
 
@@ -243,9 +258,10 @@ int main(int argc, char * argv[]) {
         ejercicio1(*sb);
         break;
     case 'l':
-        ejercicio2(fd1, *sb, *gd, ti);
+        ejercicio2(fd1, *sb, *gd, ti, tde, cantEntradasDirectorios);
         break;
     case 'b':
+    	ejercicio3(ti, tde);
         break;
     }
 
