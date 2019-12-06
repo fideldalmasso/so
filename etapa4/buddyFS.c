@@ -218,7 +218,7 @@ int potencia(int base,int exp){
 }
 
 void imprimir(int tamNube,int nodo, int arbol[]){
-        int permission=0,llimit,ulimit,tab;
+    int permission=0,llimit,ulimit,tab;
 
         if(nodo==0)
                 permission=1;
@@ -289,14 +289,15 @@ void asignar(int tamNube,int tamArchivo, int arbol[]){
 
 void ejercicio3 (struct ext2_inode ti [], struct ext2_dir_entry tde [], int cantEntradasDirectorios, int tamNube){
     int i=0, espacioOcupado=0;
-    int *arbol=(int*) malloc (tamNube*sizeof(int));
     int *pesoArchivos=(int*) malloc (cantEntradasDirectorios*sizeof(int));
+    int *arbol=(int*) malloc (tamNube*sizeof(int));
     
     for (i=0; i<cantEntradasDirectorios; i++){
-        pesoArchivos[i]=ti[tde[i].inode].i_size;
+        pesoArchivos[i]=ti[tde[i].inode-1].i_size;
         espacioOcupado+=pesoArchivos[i];
         asignar(tamNube,pesoArchivos[i],arbol);
-        imprimir(tamNube,pesoArchivos[i],arbol);
+    imprimir(tamNube,0,arbol);
+    printf("\n");
     }
 
     printf("ESPACIO TOTAL OCUPADO %d\n",espacioOcupado);
@@ -305,13 +306,13 @@ void ejercicio3 (struct ext2_inode ti [], struct ext2_dir_entry tde [], int cant
 
 //------------------------------------------------------------------------
 int main(int argc, char * argv[]) {
-    if (argc < 3) {
+    if (argc < 2) {
         printf("Modo de uso\nbuddyFS [-s][-l][-b tamanioNube] /rutaimagen\n");
         exit(0);
     };
 
     int fd1;
-    if ((fd1 = open("/extra/lab_fs", O_RDONLY) ) == -1) mostrarError("open");
+    if ((fd1 = open("extra/lab_fs", O_RDONLY) ) == -1) mostrarError("open");
 
     struct ext2_super_block * sb = malloc(1024);
 
@@ -369,10 +370,10 @@ int main(int argc, char * argv[]) {
         ejercicio2(fd1, *sb, *gd, ti, tde, cantEntradasDirectorios);
         break;
     case 'b':
-        if(argc != 2){
+        if(argc != 3){
             printf("Debe ingresarse el tamaño de la nube, y solo uno.\n");
-        } else {
-            int tamNube = atoi(argv[2]);
+        } else {     
+    int tamNube = atoi(argv[2]);
             ejercicio3(ti, tde, cantEntradasDirectorios, tamNube);
         }
         break;
