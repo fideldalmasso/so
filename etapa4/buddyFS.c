@@ -322,7 +322,7 @@ int espacioSuficiente (struct ext2_inode ti [], struct ext2_dir_entry_2 tde [], 
     for (i=0; i<cantEntradasDirectorios; i++){
         pesoArchivos[i]=ti[tde[i].inode-1].i_size;
         if (asignar2(tamNube,pesoArchivos[i],arbol)==0){
-            tamNube=espacioSuficiente(ti,tde,cantEntradasDirectorios,tamNube*2);
+            return tamNube=espacioSuficiente(ti,tde,cantEntradasDirectorios,tamNube*2);
         }
     }
     return tamNube;
