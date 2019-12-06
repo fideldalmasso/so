@@ -11,6 +11,10 @@
 #include <linux/magic.h>
 #include <linux/fs.h>
 #include <linux/ext2_fs.h>
+// si linux/ext2_fs.h no existe, instalar e2fslibs-dev 
+// y utilizar la libreria siguiente
+//#include <ext2fs/ext2_fs.h> 
+#include <errno.h>
 
 #define EXT2_S_IFMT     0xF000  /* format mask  */
 #define EXT2_S_IFLNK    0xA000  /* symbolic link */
@@ -40,7 +44,7 @@ void usuarioF(int uid, char usuarioS []);
 
 
 void mostrarError(char texto[]) {
-    printf("Error nΓΊmero: %d\n", errno);
+    printf("Error numero: %d\n", errno);
     perror(texto);
     exit(1);
 }
@@ -130,7 +134,7 @@ void obtenerModo(int modo, char salida[11]) {
     char salida2[11] = "---------- ";
     char salida3[11] = "-rwxrwxrwx ";
 
-    int aux = EXT2_S_IFMT & modo; //aplicamos el mask
+    int aux = EXT2_S_IFMT & modo; //aplicar mask
 
     switch (aux) {
     case EXT2_S_IFDIR:
@@ -145,12 +149,12 @@ void obtenerModo(int modo, char salida[11]) {
     }
 
     int i;
-    for (i = 0; i < 9; i++) {
+    for (i = 0; i < 9; i++) { //los permisos estan ubicados en los primeros 9 bits
         if ((modo >> i) & 1)
             salida2[9 - i] = salida3[9 - i];
     }
 
-    salida2[10] = '\0';
+    //salida2[10] = '\0';
     strcpy(salida, salida2);
 
 }
@@ -163,15 +167,18 @@ void ejercicio2(int fd1, struct ext2_super_block sb, struct ext2_group_desc gd, 
 
     __le32 idBloqueDeEntradasRaiz = ti[1].i_block[0];
     int entradaDirectorio = idBloqueDeEntradasRaiz * tamBloque;
-    printf("entradadir%d\n", entradaDirectorio);
 
     printf("%-8s %-16s %-6s %-8s %-8s %-8s %-16s %-16s\n", "Inodo", "Modo", "Links", "Usr", "Grp", "Tamanio", "Fecha", "Archivos");
     int i = 0;
     for(i=0;i<cantEntradasDirectorios;i++) {
-        char usuarioTexto[16] = {' '};
-        char grupoTexto[16] = {' '};
-        char fechaTexto[24] = {' '};
-        char modoTexto[11] = {' '};
+        char usuarioTexto[16];
+        char grupoTexto[16];
+        char fechaTexto[24];
+        char modoTexto[11];
+        memset(usuarioTexto,' ',16);
+        memset(grupoTexto,' ',16);
+        memset(fechaTexto,' ',24);
+        memset(modoTexto,' ',11);
         
         obtenerModo(ti[tde[i].inode - 1].i_mode, modoTexto);
         fechaF(ti[tde[i].inode - 1].i_mtime, fechaTexto);
@@ -180,9 +187,6 @@ void ejercicio2(int fd1, struct ext2_super_block sb, struct ext2_group_desc gd, 
 
         printf("%-8d %-16s %-6d %-8s %-8s %-8d %-16s %-16s\n", tde[i].inode, modoTexto, ti[tde[i].inode - 1].i_links_count, usuarioTexto, grupoTexto, ti[tde[i].inode - 1].i_size, fechaTexto, tde[i].name);
 
-        //if ((entradaDirectorio + tde[i].rec_len) % tamBloque == 0) break;
-        //entradaDirectorio += tde[i].rec_len;
-        //i++;
     }
 
 }
@@ -237,17 +241,13 @@ int main(int argc, char * argv[]) {
 	while (1) {
     	if (lseek(fd1, entradaDirectorio, SEEK_SET) == -1) mostrarError("lseek");
         if (read(fd1, de, sizeof(struct ext2_dir_entry)) == -1) mostrarError("read");
-//        if (read(fd1, &de, 255+8) == -1) mostrarError("read");
         tde[n]=*de;
-	//printf2("recLen",de->rec_len);
-	//printf1("nombre",de->name);
+
         entradaDirectorio += de->rec_len;
         if ((entradaDirectorio % tamBloque) == 0) break;
         n++;
     }
-//    struct ext2_dir_entry * de = malloc(sizeof(struct ext2_dir_entry);
     int cantEntradasDirectorios = n++;
-	printf2("cantdirectorios",cantEntradasDirectorios);
 
     if ((c = getopt (argc, argv, "slb")) < 0) mostrarError("getopt");
 
@@ -262,9 +262,7 @@ int main(int argc, char * argv[]) {
     	//ejercicio3(ti, tde, cantEntradasDirectorios);
         break;
     }
-/*
 
-*/
     return 0;
 
 }
