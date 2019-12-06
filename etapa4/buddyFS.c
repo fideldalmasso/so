@@ -287,11 +287,11 @@ void asignar(int tamNube,int tamArchivo, int arbol[]){
         }
 }
 
-void asignar2(int tamNube,int tamArchivo, int arbol[]){
+int asignar2(int tamNube,int tamArchivo, int arbol[]){
         int nivelActual=0, tamActual=tamNube, i=0;
         
         if(tamArchivo>tamNube){
-                return false;
+                return 0;
         }
 
         while(1){
@@ -307,12 +307,12 @@ void asignar2(int tamNube,int tamArchivo, int arbol[]){
                 if(arbol[i]==0 && place(i,arbol)){
                         arbol[i]=tamArchivo;
                         particionar(i,arbol);
-                        return true;
+                        return 1;
                 }
         }
 
         if(i==potencia(2,nivelActual+1)-1){
-            return false;
+            return 0;
         }
 }
 
@@ -323,11 +323,10 @@ int espacioSuficiente (struct ext2_inode ti [], struct ext2_dir_entry tde [], in
     
     for (i=0; i<cantEntradasDirectorios; i++){
         pesoArchivos[i]=ti[tde[i].inode-1].i_size;
-        if (asignar2(tamNube,pesoArchivos[i],arbol)==false){
+        if (asignar2(tamNube,pesoArchivos[i],arbol)==0){
             tamNube=espacioSuficiente(ti,tde,cantEntradasDirectorios,tamNube*2);
         }
     }
-
     return tamNube;
 }
 
@@ -344,7 +343,7 @@ void ejercicio3 (struct ext2_inode ti [], struct ext2_dir_entry tde [], int cant
         printf("\n");
     }
 
-    printf("ESPACIO NECESARIO PARA REALIZAR TODAS LAS ASIGNACIONES: %d", espacioSuficiente(ti,tde,cantEntradasDirectorios,tamNube));
+    printf("ESPACIO NECESARIO PARA REALIZAR TODAS LAS ASIGNACIONES: %d\n", espacioSuficiente(ti,tde,cantEntradasDirectorios,tamNube));
     printf("ESPACIO TOTAL OCUPADO %db\n",espacioOcupado);
 
 }
