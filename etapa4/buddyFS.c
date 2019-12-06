@@ -43,19 +43,6 @@ void usuarioF(int uid, char usuarioS []);
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 void mostrarError(char texto[]) {
     printf("Error numero: %d\n", errno);
     perror(texto);
@@ -382,48 +369,22 @@ void cargarGroupDescriptor(int fd, struct ext2_group_desc * gd){
 	
 	}
 
-int main(int argc, char * argv[]) {
+void cargarTablaInodos(int fd1,struct ext2_inode *ti, int posTablaInodos,int cantInodos){
 	
-    int fd1, posTablaInodos, p,c, n=0, cantEntradasDirectorios;
-    __le32  cantInodos;
-	
-	
-    struct ext2_super_block * sb = malloc(1024);
-	struct ext2_group_desc * gd = malloc(1024);
-    struct ext2_inode * i = (struct ext2_inode*)malloc(128);
-	
-    if (argc < 2) {
-       mostrarUso();
-    };
-
-    if ((fd1 = open("extra/lab_fs", O_RDONLY) ) == -1) mostrarError("open");
-
-	cargarSuperbloque(fd1,sb);
-	
-	
-	cargarGroupDescriptor(fd1,gd);
-	
-	
-	//cargarTablaInodos();
-	//cargarTablaEntradasDirectorios();
-	
-    cantInodos = (sb->s_inodes_count) - (sb->s_free_inodes_count);
-
-    struct ext2_inode ti[184];             //tabla de inodos
-
-    posTablaInodos = (gd->bg_inode_table * 1024);
-
+	struct ext2_inode * i = (struct ext2_inode*)malloc(sizeof(struct ext2_inode));
+	int p;
     for (p = 0; p < cantInodos; p++) {
         if (lseek(fd1, posTablaInodos + (p * 128), SEEK_SET) == -1) mostrarError("lseek");
         if (read(fd1, i, 128) == -1) mostrarError("read");
         ti[p] = *i;
     }
+}
 
-    int tamBloque = sb->s_log_block_size + 1024;
-    __le32 idBloqueDeEntradasRaiz = ti[1].i_block[0];
-    int entradaDirectorio = idBloqueDeEntradasRaiz * tamBloque;
-    struct ext2_dir_entry_2 * de = malloc(sizeof(struct ext2_dir_entry_2));
-    struct ext2_dir_entry_2 tde[200];
+int cargarTablaEntradasDirectorios(int fd1,struct ext2_dir_entry_2  *tde,int entradaDirectorio,int tamBloque){
+	
+	struct ext2_dir_entry_2 * de = malloc(sizeof(struct ext2_dir_entry_2));
+
+	int n=0;
     while (1) {
         if (lseek(fd1, entradaDirectorio, SEEK_SET) == -1) mostrarError("lseek");
         if (read(fd1, de, sizeof(struct ext2_dir_entry_2)) == -1) mostrarError("read");
@@ -437,7 +398,45 @@ int main(int argc, char * argv[]) {
         if ((entradaDirectorio % tamBloque) == 0) break;
         
     }
-     cantEntradasDirectorios = n;
+    return n;
+	
+}
+
+int main(int argc, char * argv[]) {
+	
+    int fd1, posTablaInodos,c,tamBloque,entradaDirectorio, cantEntradasDirectorios;
+    __le32  cantInodos, idBloqueDeEntradasRaiz;
+	
+    struct ext2_super_block * sb = malloc(sizeof(struct ext2_super_block));
+	struct ext2_group_desc * gd = malloc(1024);
+    //struct ext2_dir_entry_2 tde[184];
+    //struct ext2_inode ti[184];     
+	
+    if (argc < 2) 
+		mostrarUso();
+
+    if ((fd1 = open("extra/imagen2.flp", O_RDONLY) ) == -1) mostrarError("open");
+
+	//superbloque
+	cargarSuperbloque(fd1,sb);
+	//groupDescriptor
+	cargarGroupDescriptor(fd1,gd);
+	
+	//tabla de inodos
+    cantInodos = (sb->s_inodes_count) - (sb->s_free_inodes_count);
+    posTablaInodos = (gd->bg_inode_table * 1024);
+	struct ext2_inode *ti = (struct ext2_inode *)malloc(cantInodos * sizeof(struct ext2_inode));
+	cargarTablaInodos(fd1,ti,posTablaInodos,cantInodos);
+
+	//tablaEntradasDirectorios
+    tamBloque = sb->s_log_block_size + 1024;
+    idBloqueDeEntradasRaiz = ti[1].i_block[0];
+    entradaDirectorio = idBloqueDeEntradasRaiz * tamBloque;
+    
+    struct ext2_dir_entry_2 *tde = (struct ext2_dir_entry_2  *)malloc(cantInodos * sizeof(struct ext2_dir_entry_2 ));
+    cantEntradasDirectorios = cargarTablaEntradasDirectorios(fd1,tde, entradaDirectorio,tamBloque);
+
+
 
     if ((c = getopt (argc, argv, "slb")) < 0) mostrarError("Debe ingresar un argumento");
 
