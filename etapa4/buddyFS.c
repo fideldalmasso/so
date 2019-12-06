@@ -10,10 +10,10 @@
 #include <pwd.h>
 #include <linux/magic.h>
 #include <linux/fs.h>
-#include <linux/ext2_fs.h>
+// #include <linux/ext2_fs.h>
 // si linux/ext2_fs.h no existe, instalar e2fslibs-dev 
 // y utilizar la libreria siguiente
-//#include <ext2fs/ext2_fs.h> 
+#include <ext2fs/ext2_fs.h> 
 #include <errno.h>
 
 #define EXT2_S_IFMT     0xF000  /* format mask  */
@@ -39,6 +39,20 @@ void leerEImprimir2(int fd, int offset, int bytes, int *buffer, char texto[]);
 void mostrarError(char texto[]);
 void obtenerModo(int modo, char salida[11]);
 void usuarioF(int uid, char usuarioS []);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -350,51 +364,66 @@ void mostrarUso(){
      exit(0);
 	}
 //------------------------------------------------------------------------
-int main(int argc, char * argv[]) {
+
+void cargarSuperbloque(int fd,  struct ext2_super_block * sb){
 	
-	
-    if (argc < 2) {
-       mostrarUso();
-    };
-
-    int fd1;
-    if ((fd1 = open("extra/lab_fs", O_RDONLY) ) == -1) mostrarError("open");
-
-    struct ext2_super_block * sb = malloc(1024);
-
-    if (lseek(fd1, 1024, SEEK_SET) == -1) mostrarError("lseek");
-    if (read(fd1, sb, 1024) == -1) mostrarError("read");
+	if (lseek(fd, 1024, SEEK_SET) == -1) mostrarError("lseek");
+    if (read(fd, sb, 1024) == -1) mostrarError("read");
 
     if (sb->s_magic != EXT2_SUPER_MAGIC) {
         printf("%s\n", "No hay sistema de archivos tipo EXT2");
         exit(1);
     }
-    struct ext2_group_desc * gd = malloc(1024);
+}
+
+void cargarGroupDescriptor(int fd, struct ext2_group_desc * gd){
+	if (lseek(fd, 1024 * 2, SEEK_SET) == -1) mostrarError("lseek");
+    if (read(fd, gd, 1024) == -1) mostrarError("read");
+	
+	}
+
+int main(int argc, char * argv[]) {
+	
+    int fd1, posTablaInodos, p,c, n=0, cantEntradasDirectorios;
+    __le32  cantInodos;
+	
+	
+    struct ext2_super_block * sb = malloc(1024);
+	struct ext2_group_desc * gd = malloc(1024);
     struct ext2_inode * i = (struct ext2_inode*)malloc(128);
+	
+    if (argc < 2) {
+       mostrarUso();
+    };
 
-    if (lseek(fd1, 1024 * 2, SEEK_SET) == -1) mostrarError("lseek");
-    if (read(fd1, gd, 1024) == -1) mostrarError("read");
+    if ((fd1 = open("extra/lab_fs", O_RDONLY) ) == -1) mostrarError("open");
 
-    __le32  cantInodos = (sb->s_inodes_count) - (sb->s_free_inodes_count);
+	cargarSuperbloque(fd1,sb);
+	
+	
+	cargarGroupDescriptor(fd1,gd);
+	
+	
+	//cargarTablaInodos();
+	//cargarTablaEntradasDirectorios();
+	
+    cantInodos = (sb->s_inodes_count) - (sb->s_free_inodes_count);
 
     struct ext2_inode ti[184];             //tabla de inodos
 
-    int posTablaInodos = (gd->bg_inode_table * 1024);
-    int p;
+    posTablaInodos = (gd->bg_inode_table * 1024);
+
     for (p = 0; p < cantInodos; p++) {
         if (lseek(fd1, posTablaInodos + (p * 128), SEEK_SET) == -1) mostrarError("lseek");
         if (read(fd1, i, 128) == -1) mostrarError("read");
         ti[p] = *i;
     }
 
-    int c;
-
     int tamBloque = sb->s_log_block_size + 1024;
     __le32 idBloqueDeEntradasRaiz = ti[1].i_block[0];
     int entradaDirectorio = idBloqueDeEntradasRaiz * tamBloque;
     struct ext2_dir_entry_2 * de = malloc(sizeof(struct ext2_dir_entry_2));
     struct ext2_dir_entry_2 tde[200];
-    int n =0;
     while (1) {
         if (lseek(fd1, entradaDirectorio, SEEK_SET) == -1) mostrarError("lseek");
         if (read(fd1, de, sizeof(struct ext2_dir_entry_2)) == -1) mostrarError("read");
@@ -408,7 +437,7 @@ int main(int argc, char * argv[]) {
         if ((entradaDirectorio % tamBloque) == 0) break;
         
     }
-    int cantEntradasDirectorios = n;
+     cantEntradasDirectorios = n;
 
     if ((c = getopt (argc, argv, "slb")) < 0) mostrarError("Debe ingresar un argumento");
 
