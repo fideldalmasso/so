@@ -191,9 +191,119 @@ void ejercicio2(int fd1, struct ext2_super_block sb, struct ext2_group_desc gd, 
 
 }
 
+//ejercicio3------------------------------------------------------------------------
+void particionar(int nodo, int arbol[]){
+        while(nodo!=0){
+                nodo=nodo%2==0?(nodo-1)/2:nodo/2;
+                arbol[nodo]=1;
+        }
+}
+
+int place(int nodo, int arbol[]){
+        while(nodo!=0){
+                nodo=nodo%2==0?(nodo-1)/2:nodo/2;
+                if(arbol[nodo]>1)
+                        return 0;
+        }
+        return 1;
+}
+
+int potencia(int base,int exp){
+        int i,resp;
+        if(exp==0) return 1;
+        resp=base;
+        for(i=1;i<exp;i++)
+                resp*=base;
+        return resp;
+}
+
+void imprimir(int tamNube,int nodo, int arbol[]){
+        int permission=0,llimit,ulimit,tab;
+
+        if(nodo==0)
+                permission=1;
+        else if(nodo%2==0)
+                permission=arbol[(nodo-1)/2]==1?1:0;
+            else
+                permission=arbol[nodo/2]==1?1:0;
+        
+        if(permission){
+                llimit=ulimit=tab=0;
+
+                while(1){
+                    if(nodo>=llimit && nodo<=ulimit){
+                        break;
+                    }else{
+                        tab++;
+                        printf(".");
+                        llimit=ulimit+1;
+                        ulimit=2*ulimit+2;
+                    }
+                }
+
+                printf(" %d ",tamNube/potencia(2,tab));
+
+                if(arbol[nodo]>1)
+                     printf("---> Asignado %db\n",arbol[nodo]);
+                else 
+                    if(arbol[nodo]==1)
+                        printf("------> \n");
+                    else 
+                        printf("|---> Libre\n");
+
+                imprimir(tamNube,2*nodo+1,arbol);
+                imprimir(tamNube,2*nodo+2,arbol);
+        }
+}
+
+void asignar(int tamNube,int tamArchivo, int arbol[]){
+        int nivelActual=0, tamActual=tamNube, i=0;
+        
+        if(tamArchivo>tamNube){
+                printf("Asignacion de %db FALLIDA (no hay mas espacio)\n",tamArchivo);
+                return;
+        }
+
+        while(1){
+                if(tamArchivo<=tamActual && tamArchivo>(tamActual/2)){
+                        break;
+                }else{
+                        tamActual/=2;
+                        nivelActual++;
+                }
+        }
+
+        for(i=potencia(2,nivelActual)-1;i<=(potencia(2,nivelActual+1)-2);i++){
+                if(arbol[i]==0 && place(i,arbol)){
+                        arbol[i]=tamArchivo;
+                        particionar(i,arbol);
+                        printf("Asignacion de %db EXITOSA\n",tamArchivo);
+                        break;
+                }
+        }
+
+        if(i==potencia(2,nivelActual+1)-1){
+                printf("Asignacion de %db FALLIDA (no hay mas espacio)\n",tamArchivo);
+        }
+}
+
+void ejercicio3 (struct ext2_inode ti [], struct ext2_dir_entry tde [], int cantEntradasDirectorios, int tamNube){
+    int i=0, espacioOcupado=0;
+    int *arbol=(int*) malloc (tamNube*sizeof(int));
+    int *pesoArchivos=(int*) malloc (cantEntradasDirectorios*sizeof(int));
+    
+    for (i=0; i<cantEntradasDirectorios; i++){
+        pesoArchivos[i]=ti[tde[i].inode].i_size;
+        espacioOcupado+=pesoArchivos[i];
+        asignar(tamNube,pesoArchivos[i],arbol);
+        imprimir(tamNube,pesoArchivos[i],arbol);
+    }
+
+    printf("ESPACIO TOTAL OCUPADO %d\n",espacioOcupado);
+
+}
+
 //------------------------------------------------------------------------
-
-
 int main(int argc, char * argv[]) {
     if (argc < 3) {
         printf("Modo de uso\nbuddyFS [-s][-l][-b tamanioNube] /rutaimagen\n");
@@ -201,7 +311,7 @@ int main(int argc, char * argv[]) {
     };
 
     int fd1;
-    if ((fd1 = open(argv[2], O_RDONLY) ) == -1) mostrarError("open");
+    if ((fd1 = open("/extra/lab_fs", O_RDONLY) ) == -1) mostrarError("open");
 
     struct ext2_super_block * sb = malloc(1024);
 
@@ -238,8 +348,8 @@ int main(int argc, char * argv[]) {
     struct ext2_dir_entry * de = malloc(sizeof(struct ext2_dir_entry));
     struct ext2_dir_entry tde[200];
     int n =0;
-	while (1) {
-    	if (lseek(fd1, entradaDirectorio, SEEK_SET) == -1) mostrarError("lseek");
+    while (1) {
+        if (lseek(fd1, entradaDirectorio, SEEK_SET) == -1) mostrarError("lseek");
         if (read(fd1, de, sizeof(struct ext2_dir_entry)) == -1) mostrarError("read");
         tde[n]=*de;
 
@@ -259,7 +369,12 @@ int main(int argc, char * argv[]) {
         ejercicio2(fd1, *sb, *gd, ti, tde, cantEntradasDirectorios);
         break;
     case 'b':
-    	//ejercicio3(ti, tde, cantEntradasDirectorios);
+        if(argc != 2){
+            printf("Debe ingresarse el tamaño de la nube, y solo uno.\n");
+        } else {
+            int tamNube = atoi(argv[2]);
+            ejercicio3(ti, tde, cantEntradasDirectorios, tamNube);
+        }
         break;
     }
 
