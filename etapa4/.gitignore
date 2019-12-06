@@ -2,5 +2,6 @@
 !/**/
 !*.c
 !*.h
+!*.odt
 !.gitignore
 *.odt#
