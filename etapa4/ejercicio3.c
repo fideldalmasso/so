@@ -2,16 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h> 
 
-
 int asignar2(int tamNube,int tamArchivo, int arbol[]);
-void asignar(int tamNube,int tamArchivo, int arbol[]);
+void asignar(int tamNube,int tamArchivo, int arbol[],int falla[1]);
 int espacioSuficiente(struct ext2_inode ti [], struct ext2_dir_entry_2 tde [], int cantEntradasDirectorios, int tamNube);
 void imprimir(int tamNube,int nodo, int arbol[]);
 void particionar(int nodo, int arbol[]);
 int place(int nodo, int arbol[]);
 int potencia(int base,int exp);
-
-
 
 void particionar(int nodo, int arbol[]){
 	while(nodo!=0){
@@ -77,11 +74,12 @@ void imprimir(int tamNube,int nodo, int arbol[]){
 	}
 }
 
-void asignar(int tamNube,int tamArchivo, int arbol[]){
+void asignar(int tamNube,int tamArchivo, int arbol[], int falla[1]){
 	int nivelActual=0, tamActual=tamNube, i=0;
 	
 	if(tamArchivo>tamNube){
 		printf("Asignacion de %db FALLIDA (no hay mas espacio)\n",tamArchivo);
+		falla[0]=1;
 		return;
 	}
 	
@@ -105,6 +103,7 @@ void asignar(int tamNube,int tamArchivo, int arbol[]){
 	
 	if(i==potencia(2,nivelActual+1)-1){
 		printf("Asignacion de %db FALLIDA (no hay mas espacio)\n",tamArchivo);
+		falla[0]=1;
 	}
 }
 
@@ -157,16 +156,19 @@ void ejercicio3 (struct ext2_inode ti [], struct ext2_dir_entry_2 tde [], int ca
 	int i=0, espacioOcupado=0;
 	int *pesoArchivos=(int*) malloc (cantEntradasDirectorios*sizeof(int));
 	int *arbol=(int*) malloc (tamNube*sizeof(int));
-	
+	int falla[1]={0};
 	for (i=0; i<cantEntradasDirectorios; i++){
 		pesoArchivos[i]=ti[tde[i].inode-1].i_size;
 		espacioOcupado+=pesoArchivos[i];
-		asignar(tamNube,pesoArchivos[i],arbol);
+		asignar(tamNube,pesoArchivos[i],arbol,falla);
 		imprimir(tamNube,0,arbol);
 		printf("\n");
 	}
 	
-	printf("ESPACIO NECESARIO PARA REALIZAR TODAS LAS ASIGNACIONES: %d\n", espacioSuficiente(ti,tde,cantEntradasDirectorios,tamNube));
+	
+	if(falla[0]==1){
+		printf("ESPACIO NECESARIO PARA REALIZAR TODAS LAS ASIGNACIONES: %d\n", espacioSuficiente(ti,tde,cantEntradasDirectorios,tamNube));
+	}
 	printf("ESPACIO TOTAL OCUPADO %db\n",espacioOcupado);
 	
 }
