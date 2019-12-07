@@ -5,3 +5,5 @@
 !*.odt
 !.gitignore
 *.odt#
+!Makefile
+!proyecto.zpr
